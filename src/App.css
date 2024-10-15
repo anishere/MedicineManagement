@@ -1,0 +1,195 @@
+/* main app */
+.header {
+  padding-top: 12px;
+  background: #fff;
+}
+
+.content {
+  margin: 24px 16px;
+  padding: 20px;
+}
+
+.trigger-btn {
+  font-size: 16px;
+  width: 50px;
+  height: 50px;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+}
+
+/* sider */
+.sider {
+  height: 100vh;
+  position: sticky !important;
+  left: 0;
+  bottom: 0;
+  top: 0;
+}
+
+.logo {
+  color: #4f6f52;
+  margin: 35px 0;
+  font-size: 1.7rem;
+}
+
+.menu-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.ant-menu-item-selected {
+  background-color: #4f6f52 !important;
+  color: #fff !important;
+}
+
+/* sider end */
+
+/* Header start */
+.header-icon {
+  background: #d2e3c8;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 15px;
+  color: #4f6f52;
+  cursor: pointer;
+}
+
+/* Header end */
+
+/* medicine */
+
+.wrap-medicine {
+  width: 100%;
+}
+
+.table-medicine {
+}
+
+.sec-infoMedicine {
+  margin-top: 10px;
+  background-color: #cbc9c7;
+  padding: 10px 0 10px 10px;
+  border-radius: 3px;
+}
+
+.sec-infoMedicine h3 {
+  text-align: center;
+}
+
+#medicineCategory {
+  width: 30%;
+  font-size: 0.8rem;
+}
+
+.img-medicine {
+  width: 100%;
+  border-radius: 5px;
+}
+
+.file-input {
+  display: none; /* Ẩn input file */
+}
+
+.styled-label {
+  background-color: #2c6e49;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  display: inline-block;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.styled-label:hover {
+  background-color: #245840; /* Màu nền khi hover */
+}
+
+.warning-text {
+  font-size: 0.8em; /* Kích thước chữ nhỏ hơn */
+  color: #6c757d; /* Màu chữ nhạt hơn */
+}
+
+.btn-effectMedicine {
+  width: 60%;
+}
+
+/* medicine end */
+
+/* Btn, and color */
+
+.ant-btn:hover {
+  color: #4f6f52 !important;
+  border-color: #4f6f52 !important;
+}
+
+.ant-btn-primary {
+  background-color: #4f6f52 !important;
+  color: #fff !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #173a1a !important;
+  color: #fff !important;
+}
+
+.primary--color {
+  color: #4f6f52 !important;
+}
+
+.primary--light--color {
+  color: #739072 !important;
+}
+
+.secondary--color {
+  color: #86a789 !important;
+}
+
+.light--color {
+  color: #d2e3c8 !important;
+}
+
+.gray--color {
+  color: rgb(182, 181, 181) !important;
+}
+
+/* Btn, and color end */
+
+.container-login {
+  width: 30%;
+  margin: 120px auto;
+  text-align: center;
+}
+
+.container-login h1 {
+  margin-bottom: 30px;
+}
+
+.container-login input {
+  display: block;
+  width: 100%;
+  margin-bottom: 30px;
+  height: 40px;
+  border-radius: 30px;
+  border: 1px solid transparent;
+  outline: none;
+  padding-left: 15px;
+  caret-color: green;
+}
+
+.btn-login {
+  width: 200px;
+  height: 40px;
+  background-color: green;
+  margin: auto;
+  align-content: center;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.btn-login:hover {
+  opacity: 0.7;
+}
