@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLListMedicine } from "../../URL/url";
+import { URLEmployeID, URLListMedicine } from "../../URL/url";
 import { Button, Input, Space, Table } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
@@ -13,11 +13,17 @@ function sellMedicine() {
     const searchInput = useRef(null);
     const [idSelected, setIdSelected] = useState('');
 
+    const [employee, setEmployee] = useState();
+
     useEffect(() => {
+        const employeeID = localStorage.getItem('maNV')
+
         const fetchData = async () => {
             try {
                 const res = await axiosCus.get(URLListMedicine);
                 setListMedicine(res.listMedicine); 
+                const resEP = await axiosCus.get(`${URLEmployeID}${employeeID}`)
+                setEmployee(resEP.listNhanVien[0]);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -107,7 +113,7 @@ function sellMedicine() {
     const getIDMedicine = (medicineID) => {
         setIdSelected(medicineID);
     };
-    console.log(idSelected)
+    console.log(employee)
 
     // Cấu hình cột cho bảng
     const columns = [
@@ -158,6 +164,9 @@ function sellMedicine() {
             ),
         },
     ];
+
+    // note : xử lý xong api bên font end, còn đem về font đề xử lý show ra bảng 
+    // (chưa làm quản lí kh) 
 
     return (
         <div className="wrap-sell">

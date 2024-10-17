@@ -11,3 +11,7 @@ export const URLCategory = 'DanhMuc/GetAllCategories'
 
 //Login 
 export const URLLogin = 'Account/Login'
+
+//Employe
+export const URLListEmployee = 'NhanVien/ListNhanVien'
+export const URLEmployeID = 'NhanVien/GetNhanVien/'
