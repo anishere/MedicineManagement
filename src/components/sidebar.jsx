@@ -4,6 +4,8 @@ import { Flex, Menu } from "antd";
 import { FaUserDoctor } from "react-icons/fa6";
 import { Link } from "react-router-dom"; // Import Link
 
+const { SubMenu } = Menu; // Sử dụng SubMenu từ Menu
+
 function Sidebar() {
     return (
         <>
@@ -18,9 +20,18 @@ function Sidebar() {
                     <Link to='/'>Dashboard</Link> {/* Điều hướng đến "/" */}
                 </Menu.Item>
 
-                <Menu.Item key='2' icon={<FormOutlined />}>
-                    <Link to='/medicineManagement'>Quản lý thuốc</Link> {/* Điều hướng đến "/medicine" */}
-                </Menu.Item>
+                {/* Tạo Menu con cho Quản lý thuốc */}
+                <SubMenu key='sub1' icon={<FormOutlined />} title="Quản lý thuốc">
+                    <Menu.Item key='2-1'>
+                        <Link to='/medicineManagement'>Danh sách thuốc</Link> {/* Điều hướng đến trang Quản lý thuốc */}
+                    </Menu.Item>
+                    <Menu.Item key='2-2'>
+                        <Link to='/sellMedicine'>Bán thuốc</Link> {/* Điều hướng đến trang Bán thuốc */}
+                    </Menu.Item>
+                    <Menu.Item key='2-3'>
+                        <Link to='/addMedicine'>Danh sách hóa đơn</Link> {/* Điều hướng đến trang Thêm thuốc */}
+                    </Menu.Item>
+                </SubMenu>
 
                 <Menu.Item key='3' icon={<UserSwitchOutlined />}>
                     <Link to='/accountManagement'>Quản lý tài khoản</Link> {/* Điều hướng đến "/accounts" */}

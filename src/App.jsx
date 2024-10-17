@@ -1,6 +1,6 @@
 import { Button, Flex, Layout } from 'antd';
 import './App.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/sidebar';
@@ -11,12 +11,21 @@ import MedicineManagement from './components/medicineManagement';  // Component 
 import AccountManagement from './components/accountManagement';  // Component cho route Accounts
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import SellMedicine from './components/sellMedicine';
+import Login from './page/login'
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
   const { Sider, Header, Content } = Layout;
 
+  const [isLogin, setIsLogin] = useState(false);
+
+  useEffect(() => {
+    setIsLogin(localStorage.getItem("isLogin"));
+  },[])
+
   return (
+      ((isLogin && isLogin === 'true') ?
       <Layout>
         <Sider className='sider' theme='light' trigger={null} collapsible collapsed={collapsed}>
           <Sidebar />
@@ -39,6 +48,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} /> {/* Mặc định là Dashboard */}
                 <Route path="/medicineManagement" element={<MedicineManagement />} />
+                <Route path="/sellMedicine" element={<SellMedicine />} />
                 <Route path="/accountManagement" element={<AccountManagement />} />
               </Routes>
             </Flex>
@@ -46,6 +56,8 @@ function App() {
         </Layout>
         <ToastContainer />
       </Layout>
+      : <Login/>
+      )
   );
 }
 

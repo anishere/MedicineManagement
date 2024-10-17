@@ -8,3 +8,6 @@ export const URLUploadImg = 'Medicine/UploadImage'
 
 //Category
 export const URLCategory = 'DanhMuc/GetAllCategories'
+
+//Login 
+export const URLLogin = 'Account/Login'

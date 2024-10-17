@@ -18,6 +18,11 @@
   left: 10px;
 }
 
+.content {
+  margin: 24px 6px;
+  padding: 0;
+}
+
 /* sider */
 .sider {
   height: 100vh;
@@ -115,6 +120,16 @@
 
 .btn-effectMedicine {
   width: 60%;
+}
+
+/* sell medicine */
+.wrap-sell {
+  width: 100%;
+}
+
+.sellMedicine .section {
+  background-color: #e6e4e2;
+  border-radius: 3px;
 }
 
 /* medicine end */
