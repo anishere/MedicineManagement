@@ -15,3 +15,14 @@ export const URLLogin = 'Account/Login'
 //Employe
 export const URLListEmployee = 'NhanVien/ListNhanVien'
 export const URLEmployeID = 'NhanVien/GetNhanVien/'
+
+//Customer
+export const URLListCustomer = 'KhachHang/ListKhachHang'
+export const URLCustomerbyPhone = 'KhachHang/GetKhachHang/'
+export const URLGetCusByID = 'KhachHang/GetKhachHangByID/'
+
+//Invoice
+export const URLCreateInvoice = 'HoaDon/AddHoaDon'
+
+//Medicine in Invoice
+export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'

@@ -1,197 +1,199 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-import { useEffect, useRef, useState } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLEmployeID, URLListMedicine } from "../../URL/url";
-import { Button, Input, Space, Table } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import Highlighter from "react-highlight-words";
+import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID } from "../../URL/url";
+import { Modal, Button, Table } from "antd";
+import MedicineTable from "../components/tableMediforSell";
+import CustomerTable from "../components/tableCusforSell";
 
-function sellMedicine() {
+function SellMedicine() {
     const [listMedicine, setListMedicine] = useState([]);
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const searchInput = useRef(null);
-    const [idSelected, setIdSelected] = useState('');
-
-    const [employee, setEmployee] = useState();
+    const [listCustomer, setListCustomer] = useState([]);
+    const [medicineSelected, setMedicineSelected] = useState({
+        id: '', 
+        quantity: 0,
+        name: '',
+        price: 0,
+    });
+    const [idCustomer, setIdCustomer] = useState();
+    const [customerSelected, setCustomerSelected] = useState();
+    const [invoiceItems, setInvoiceItems] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        const employeeID = localStorage.getItem('maNV')
-
         const fetchData = async () => {
             try {
                 const res = await axiosCus.get(URLListMedicine);
-                setListMedicine(res.listMedicine); 
-                const resEP = await axiosCus.get(`${URLEmployeID}${employeeID}`)
-                setEmployee(resEP.listNhanVien[0]);
+                setListMedicine(res.listMedicine);
+
+                const rescus = await axiosCus.get(URLListCustomer);
+                setListCustomer(rescus.listKhachHang);
+
+                if (idCustomer) {
+                    const resCusSelected = await axiosCus.get(`${URLGetCusByID}${idCustomer}`);
+                    setCustomerSelected(resCusSelected.listKhachHang[0]);
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
         fetchData();
-    }, []);
+    }, [idCustomer]);
 
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
+    const getCusbyID = (CusID) => {
+        setIdCustomer(CusID);
     };
 
-    const handleReset = (clearFilters) => {
-        clearFilters();
-        setSearchText('');
+    const getIDMedicine = (medicineID, nameMedicine, priceMedicine) => {
+        showModal();
+        setMedicineSelected({ id: medicineID, quantity: 0, name: nameMedicine, price: priceMedicine });
     };
 
-    const getColumnSearchProps = (dataIndex) => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div
-                style={{
-                    padding: 8,
-                }}
-                onKeyDown={(e) => e.stopPropagation()}
-            >
-                <Input
-                    ref={searchInput}
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{
-                        marginBottom: 8,
-                        display: 'block',
-                    }}
-                />
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{
-                            width: 90,
-                        }}
-                    >
-                        Search
-                    </Button>
-                    <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
-                        size="small"
-                        style={{
-                            width: 90,
-                        }}
-                    >
-                        Reset
-                    </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: (filtered) => (
-            <SearchOutlined
-                style={{
-                    color: filtered ? '#1677ff' : undefined,
-                }}
-            />
-        ),
-        onFilter: (value, record) =>
-            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
-        render: (text) =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{
-                        backgroundColor: '#ffc069',
-                        padding: 0,
-                    }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                text
-            ),
-    });
-
-    const getIDMedicine = (medicineID) => {
-        setIdSelected(medicineID);
+    const addMedicineToInvoice = () => {
+        if (medicineSelected.id && medicineSelected.quantity > 0) {
+            const newItem = {
+                id: medicineSelected.id,
+                name: medicineSelected.name,
+                quantity: medicineSelected.quantity,
+                price: medicineSelected.price,
+                totalPrice: medicineSelected.quantity * medicineSelected.price
+            };
+            setInvoiceItems([...invoiceItems, newItem]);
+            handleCancel();
+        }
     };
-    console.log(employee)
 
-    // Cấu hình cột cho bảng
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleOk = () => {
+        addMedicineToInvoice();
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+    //chưa xử lí
+    const confirmInvoice = async () => {
+        if (!customerSelected || invoiceItems.length === 0) {
+            alert('Vui lòng chọn khách hàng và thêm ít nhất một thuốc.');
+            return;
+        }
+
+        const employeeID = localStorage.getItem('maNV');
+
+        try {
+            const invoiceRes = await axiosCus.post(URLCreateInvoice, {
+                MaNV: employeeID,
+                MaKH: customerSelected.maKH,
+                NgayBan: new Date().toISOString(),
+                MaCN: "chi nhánh mặc định",
+                TongGia: invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0)
+            });
+
+            const maHD = invoiceRes.data.MaHD;
+
+            for (const item of invoiceItems) {
+                await axiosCus.post(URLAddMedicineToInvoice, {
+                    MaHD: maHD,
+                    MaThuoc: item.id,
+                    SoLuongBan: item.quantity,
+                    MaCN: "chi nhánh mặc định"
+                });
+            }
+
+            alert('Hóa đơn đã được tạo thành công!');
+            setInvoiceItems([]);
+        } catch (error) {
+            console.error('Error creating invoice:', error);
+            alert('Lỗi khi tạo hóa đơn. Vui lòng thử lại.');
+        }
+    };
+
+    const removeItemFromInvoice = (id) => {
+        setInvoiceItems(invoiceItems.filter(item => item.id !== id));
+    };
+
     const columns = [
         {
-            title: 'Mã',
-            dataIndex: 'maThuoc',
-            key: 'maThuoc',
-            ...getColumnSearchProps('maThuoc'),
+            title: 'Tên thuốc',
+            dataIndex: 'name',
+            key: 'name',
         },
         {
-            title: 'Tên',
-            dataIndex: 'tenThuoc',
-            key: 'tenThuoc',
-            ...getColumnSearchProps('tenThuoc'),
+            title: 'Đơn giá',
+            dataIndex: 'price',
+            key: 'price',
+            render: (text) => `${text.toLocaleString()} VND`
         },
         {
-            title: 'Danh mục',
-            dataIndex: 'maDanhMuc',
-            key: 'maDanhMuc',
-            ...getColumnSearchProps('maDanhMuc'),
+            title: 'Số Lượng',
+            dataIndex: 'quantity',
+            key: 'quantity',
         },
         {
-            title: 'Giá',
-            dataIndex: 'giaBan',
-            key: 'giaBan',
+            title: 'Thành tiền',
+            dataIndex: 'totalPrice',
+            key: 'totalPrice',
+            render: (text) => `${text.toLocaleString()} VND`
         },
         {
-            title: 'Đơn vị',
-            dataIndex: 'dvt',
-            key: 'dvt',
-        },
-        {
-            title: 'Kê Đơn',
-            dataIndex: 'keDon',
-            key: 'keDon',
-            ...getColumnSearchProps('keDon'),
-        },
-        {
-            title: 'Thêm',
+            title: 'Hành động',
             key: 'action',
-            render: (record) => (
-                <Button
-                    type="primary"
-                    onClick={() => getIDMedicine(record.maThuoc)}
-                >
-                    Thêm
+            render: (text, record) => (
+                <Button type="link" onClick={() => removeItemFromInvoice(record.id)}>
+                    Xóa
                 </Button>
             ),
         },
     ];
 
-    // note : xử lý xong api bên font end, còn đem về font đề xử lý show ra bảng 
-    // (chưa làm quản lí kh) 
+    const totalAmount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
     return (
         <div className="wrap-sell">
             <div className="sellMedicine d-flex justify-content-between">
                 <div className="section w-100 me-2 p-2">
                     <h5>Danh sách thuốc</h5>
-                    <Table
-                        className="table-medicine"
-                        columns={columns}
-                        dataSource={listMedicine}
-                        rowKey="maThuoc"
-                        pagination={{ pageSize: 10 }}
-                        onRow={() => ({
-                            onMouseEnter: (e) => {
-                                e.currentTarget.style.cursor = 'pointer';
-                            },
-                        })}
-                    />
+                    <MedicineTable listMedicine={listMedicine} getIDMedicine={getIDMedicine} />
+                    <h5>Danh sách khách hàng</h5>
+                    <CustomerTable listCustomer={listCustomer} getCusbyID={getCusbyID} />
                 </div>
-                <div className="section w-100 p-2">
-
+                <div className="section w-100 me-2 p-2">
+                    <h5>Chi tiết Hóa đơn ảo</h5>
+                    <p>Khách hàng: <b>{customerSelected && customerSelected.tenKH}</b></p>
+                    <Table
+                        dataSource={invoiceItems}
+                        columns={columns}
+                        rowKey="id"
+                        pagination={false}
+                    />
+                    <p style={{ marginTop: '10px', fontWeight: 'bold' }}>
+                        Tổng giá: {totalAmount.toLocaleString()} VND
+                    </p>
+                    <Button type="primary" onClick={confirmInvoice} style={{ marginTop: '10px' }}>
+                        Xác nhận hóa đơn
+                    </Button>
                 </div>
             </div>
+
+            {/* Modal */}
+            <Modal title="Nhập số lượng" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+                <p>
+                    <label htmlFor="">Nhập số lượng: </label>
+                    <input
+                        value={medicineSelected.quantity}
+                        onChange={(e) =>
+                            setMedicineSelected({ ...medicineSelected, quantity: parseInt(e.target.value) || 0 })
+                        }
+                        type="number"
+                    />
+                </p>
+            </Modal>
         </div>
     );
 }
 
-export default sellMedicine;
+export default SellMedicine;
