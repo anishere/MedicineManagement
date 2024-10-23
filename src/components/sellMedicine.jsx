@@ -1,10 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID } from "../../URL/url";
+import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh } from "../../URL/url";
 import { Modal, Button, Table } from "antd";
 import MedicineTable from "../components/tableMediforSell";
 import CustomerTable from "../components/tableCusforSell";
+import { Bounce, toast } from "react-toastify";
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 function SellMedicine() {
     const [listMedicine, setListMedicine] = useState([]);
@@ -16,10 +19,16 @@ function SellMedicine() {
         price: 0,
     });
     const [idCustomer, setIdCustomer] = useState();
-    const [customerSelected, setCustomerSelected] = useState();
+    const [customerSelected, setCustomerSelected] = useState({
+        maKH: 'KH999',
+        tenKH: 'Vãng lai',
+        sdt: '9999',
+        gt: '000',
+        maCN: 'CN001',
+    });
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -75,36 +84,45 @@ function SellMedicine() {
         setIsModalOpen(false);
     };
 
-    //chưa xử lí
     const confirmInvoice = async () => {
         if (!customerSelected || invoiceItems.length === 0) {
             alert('Vui lòng chọn khách hàng và thêm ít nhất một thuốc.');
             return;
         }
-
+        
         const employeeID = localStorage.getItem('maNV');
 
         try {
             const invoiceRes = await axiosCus.post(URLCreateInvoice, {
-                MaNV: employeeID,
-                MaKH: customerSelected.maKH,
-                NgayBan: new Date().toISOString(),
-                MaCN: "chi nhánh mặc định",
-                TongGia: invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0)
+                maNV: employeeID,
+                maKH: customerSelected.maKH,
+                ngayBan: new Date().toISOString(),
+                maCN: ChiNhanh,
+                tongGia: invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0)
             });
-
-            const maHD = invoiceRes.data.MaHD;
-
+            
+            const maHD = invoiceRes.maHD;
+            
             for (const item of invoiceItems) {
                 await axiosCus.post(URLAddMedicineToInvoice, {
                     MaHD: maHD,
                     MaThuoc: item.id,
                     SoLuongBan: item.quantity,
-                    MaCN: "chi nhánh mặc định"
+                    MaCN: ChiNhanh
                 });
             }
 
-            alert('Hóa đơn đã được tạo thành công!');
+            toast.success('Hóa đơn đã được tạo thành công', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+                });
             setInvoiceItems([]);
         } catch (error) {
             console.error('Error creating invoice:', error);
@@ -152,6 +170,57 @@ function SellMedicine() {
 
     const totalAmount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
+    // Import phông chữ mặc định
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+    const generatePDF = () => {
+        const docDefinition = {
+            content: [
+                {
+                    text: 'HÓA ĐƠN BÁN THUỐC',
+                    fontSize: 16,
+                    bold: true,
+                    alignment: 'center',  // Center the title
+                    margin: [0, 0, 0, 20]  // Add some margin below the title
+                },
+                {
+                    text: `Khách hàng: ${customerSelected.tenKH}`,
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Số điện thoại: ${customerSelected.sdt}`,
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Ngày lập: ${new Date().toLocaleDateString()}`,  // Include both date and time
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Giờ lập hóa đơn: ${new Date().toLocaleTimeString()}`,  // Include both date and time
+                    margin: [0, 0, 0, 20],
+                },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['*', 'auto', 'auto', 'auto'],
+                        body: [
+                            ['Tên thuốc', 'Đơn giá', 'Số lượng', 'Thành tiền'],
+                            ...invoiceItems.map(item => [item.name, `${item.price.toLocaleString()} VND`, item.quantity, `${item.totalPrice.toLocaleString()} VND`])
+                        ]
+                    }
+                },
+                {
+                    text: `Tổng giá: ${totalAmount.toLocaleString()} VND`,
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 20, 0, 0]
+                }
+            ]
+        };
+    
+        pdfMake.createPdf(docDefinition).download(`hoa_don_${new Date().getTime()}.pdf`);
+    };    
+
     return (
         <div className="wrap-sell">
             <div className="sellMedicine d-flex justify-content-between">
@@ -162,7 +231,7 @@ function SellMedicine() {
                     <CustomerTable listCustomer={listCustomer} getCusbyID={getCusbyID} />
                 </div>
                 <div className="section w-100 me-2 p-2">
-                    <h5>Chi tiết Hóa đơn ảo</h5>
+                    <h5>Chi tiết Hóa đơn</h5>
                     <p>Khách hàng: <b>{customerSelected && customerSelected.tenKH}</b></p>
                     <Table
                         dataSource={invoiceItems}
@@ -175,6 +244,9 @@ function SellMedicine() {
                     </p>
                     <Button type="primary" onClick={confirmInvoice} style={{ marginTop: '10px' }}>
                         Xác nhận hóa đơn
+                    </Button>
+                    <Button type="default" onClick={generatePDF} style={{ marginTop: '10px', marginLeft: '10px' }}>
+                        In hóa đơn
                     </Button>
                 </div>
             </div>

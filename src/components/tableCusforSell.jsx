@@ -82,7 +82,7 @@ const CustomerTable = ({ listCustomer, getCusbyID }) => {
         },
     ];
 
-    return <Table columns={columns} dataSource={listCustomer} rowKey="maKhachHang" pagination={{ pageSize: 10 }} />;
+    return <Table columns={columns} dataSource={listCustomer} rowKey="maKhachHang" pagination={{ pageSize: 4 }} />;
 };
 
 export default CustomerTable;

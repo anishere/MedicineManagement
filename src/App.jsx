@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import SellMedicine from './components/sellMedicine';
 import Login from './page/login'
+import Invoices from './components/invoices';
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/medicineManagement" element={<MedicineManagement />} />
                 <Route path="/sellMedicine" element={<SellMedicine />} />
                 <Route path="/accountManagement" element={<AccountManagement />} />
+                <Route path="/invoices" element={<Invoices />} />
               </Routes>
             </Flex>
           </Content>

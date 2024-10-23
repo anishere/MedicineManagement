@@ -84,7 +84,7 @@ const MedicineTable = ({ listMedicine, getIDMedicine }) => {
         },
     ];
 
-    return <Table columns={columns} dataSource={listMedicine} rowKey="maThuoc" pagination={{ pageSize: 10 }} />;
+    return <Table columns={columns} dataSource={listMedicine} rowKey="maThuoc" pagination={{ pageSize: 6 }} />;
 };
 
 export default MedicineTable;

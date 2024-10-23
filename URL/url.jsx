@@ -23,6 +23,13 @@ export const URLGetCusByID = 'KhachHang/GetKhachHangByID/'
 
 //Invoice
 export const URLCreateInvoice = 'HoaDon/AddHoaDon'
+export const URLListInvouces = 'HoaDon/ListHoaDon'
+export const URLGetInvoice = 'HoaDon/GetHoaDon/'
+
+//Details Invoice
+export const URLDetailsInvoice = 'ThuocTrongHD/ListThuocTrongHD/'
 
 //Medicine in Invoice
 export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'
+
+export const ChiNhanh = 'CN001'

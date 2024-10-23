@@ -134,6 +134,24 @@
 
 /* medicine end */
 
+/* Invoices */
+
+.wrap-invoices {
+  width: 100%;
+}
+
+.wrap-invoices .table-invoices {
+  width: 65%;
+  margin-right: 3px;
+}
+
+.wrap-invoices .sec-invoices {
+  margin-top: 0;
+  width: 35%;
+}
+
+/* Invoices end */
+
 /* Btn, and color */
 
 .ant-btn:hover {

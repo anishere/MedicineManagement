@@ -29,7 +29,7 @@ function Sidebar() {
                         <Link to='/sellMedicine'>Bán thuốc</Link> {/* Điều hướng đến trang Bán thuốc */}
                     </Menu.Item>
                     <Menu.Item key='2-3'>
-                        <Link to='/addMedicine'>Danh sách hóa đơn</Link> {/* Điều hướng đến trang Thêm thuốc */}
+                        <Link to='/invoices'>Danh sách hóa đơn</Link> {/* Điều hướng đến trang Thêm thuốc */}
                     </Menu.Item>
                 </SubMenu>
 
