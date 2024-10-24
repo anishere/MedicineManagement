@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { URLAddMedicine, URLCategory, URLDeleteMedicine, URLListMedicine, URLMedicineByID, URLUpdateMedicine, URLUploadImg } from "../../URL/url";
 import { axiosCus } from "../axios/axios";
 import { Table, Input, Button, Space } from "antd";
-import { SearchOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import TextArea from "antd/es/input/TextArea";
 import { Bounce, toast } from "react-toastify";
@@ -585,7 +585,7 @@ function MedicineManagement() {
                             <img src={medicine.HinhAnh ? medicine.HinhAnh : '/imgStore/default.png'} className="img-medicine" alt="Medicine Image" />
 
                             {/* Label để trigger file input */}
-                            <label htmlFor="file-input" className="mt-2 styled-label">Chọn hình ảnh</label>
+                            <label htmlFor="file-input" className="mt-2 styled-label">Chọn ảnh <FolderOpenOutlined /></label>
 
                             {/* Input để chọn file hình ảnh */}
                             <input

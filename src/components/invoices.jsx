@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { axiosCus } from "../axios/axios";
 import { URLDeleDetailByIDInvoice, URLDeleteInvoice, URLDetailsInvoice, URLGetInvoice, URLListCustomer, URLListEmployee, URLListInvouces, URLListMedicine } from "../../URL/url";
 import Highlighter from "react-highlight-words";
-import { SearchOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PrinterOutlined, SearchOutlined } from "@ant-design/icons";
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
@@ -321,7 +321,7 @@ function invoices() {
                 })}
             />
 
-            <div className="sec-infoMedicine sec-invoices">
+            <div className="sec-infoMedicine sec-invoices p-1">
                 <h3 className="mb-3">THÔNG TIN HÓA ĐƠN</h3>
                 {invoiceData && (
                     <>
@@ -355,12 +355,14 @@ function invoices() {
                         ) : (
                             <p className="text-center">Chọn 1 hóa đơn để xem thông tin chi tiết.</p>
                         )}
-                        <Button onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
-                            In Hóa Đơn
+                        <div className="text-end">
+                        <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
+                            In <PrinterOutlined />
                         </Button>
-                        <Button onClick={handleDeleteInvoice} type="primary" style={{ marginTop: '20px' }}>
-                            Xóa Hóa Đơn
+                        <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
+                            Xóa <DeleteOutlined />
                         </Button>
+                        </div>
                     </>
                 )}
             </div>
