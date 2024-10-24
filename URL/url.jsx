@@ -25,9 +25,11 @@ export const URLGetCusByID = 'KhachHang/GetKhachHangByID/'
 export const URLCreateInvoice = 'HoaDon/AddHoaDon'
 export const URLListInvouces = 'HoaDon/ListHoaDon'
 export const URLGetInvoice = 'HoaDon/GetHoaDon/'
+export const URLDeleteInvoice = 'HoaDon/DeleteHoaDon/'
 
 //Details Invoice
 export const URLDetailsInvoice = 'ThuocTrongHD/ListThuocTrongHD/'
+export const URLDeleDetailByIDInvoice = 'ThuocTrongHD/DeleteAllThuocTrongHD/'
 
 //Medicine in Invoice
 export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'

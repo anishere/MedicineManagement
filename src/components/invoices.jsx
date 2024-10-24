@@ -1,25 +1,27 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { Button, Input, Space, Table } from "antd";
+import { Button, Input, Modal, Space, Table } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLDetailsInvoice, URLGetInvoice, URLListCustomer, URLListEmployee, URLListInvouces, URLListMedicine } from "../../URL/url";
+import { URLDeleDetailByIDInvoice, URLDeleteInvoice, URLDetailsInvoice, URLGetInvoice, URLListCustomer, URLListEmployee, URLListInvouces, URLListMedicine } from "../../URL/url";
 import Highlighter from "react-highlight-words";
 import { SearchOutlined } from "@ant-design/icons";
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 function invoices() {
     const [listInvoices, setListInvoices] = useState([]);
-
-    const [isUpdate, setIsUpdate] = useState(false)
-
+    const [isUpdate, setIsUpdate] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
-
     const [idSelected, setIdSelected] = useState('');
-
+    
     const [invoiceData, setInvoiceData] = useState();
     const [invoiceDetails, setInvoiceDetails] = useState();
     const [listMedicine, setListMedicine] = useState();
+
+    // State lưu thông tin khách hàng
+    const [customerInfo, setCustomerInfo] = useState({ tenKH: '', sdtKH: '' });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -62,26 +64,40 @@ function invoices() {
         };
         fetchData();
     }, [isUpdate]);      
-
+    
     const getIDInvoice = (invoiceID) => {
         setIdSelected(invoiceID);
+
+        // Lưu thông tin khách hàng tương ứng với mã hóa đơn
+        const selectedInvoice = listInvoices.find(invoice => invoice.maHD === invoiceID);
+        if (selectedInvoice) {
+            setCustomerInfo({
+                tenKH: selectedInvoice.tenKH,
+                sdtKH: selectedInvoice.sdtKH
+            });
+        }
     };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await axiosCus.get(`${URLGetInvoice}${idSelected}`);
-                setInvoiceData(res.listHoaDon[0]);
+                const selectedInvoice = res.listHoaDon[0];
+                setInvoiceData(selectedInvoice);
+    
+                // Tìm tên nhân viên từ listInvoices
+                const selectedInvoiceFromList = listInvoices.find(invoice => invoice.maHD === selectedInvoice.maHD);
+                const employeeName = selectedInvoiceFromList ? selectedInvoiceFromList.tenNV : 'Không rõ';
+                selectedInvoice.tenNV = employeeName;  // Gắn tên nhân viên vào invoiceData
     
                 const resDetailsInvoice = await axiosCus.get(`${URLDetailsInvoice}${idSelected}`);
                 const invoiceDetails = resDetailsInvoice.listThuocTrongHD.map(detail => {
-                    // Tìm tên thuốc và giá bán tương ứng với mã thuốc trong danh sách thuốc
                     const medicine = listMedicine.find(med => med.maThuoc === detail.maThuoc);
                     return {
                         ...detail,
                         tenThuoc: medicine ? medicine.tenThuoc : 'Không rõ',
-                        giaBan: medicine ? medicine.giaBan : 0, // Lấy giá bán từ bảng thuốc
-                        thanhTien: medicine ? detail.soLuongBan * medicine.giaBan : 0 // Tính thành tiền cho mỗi loại thuốc
+                        giaBan: medicine ? medicine.giaBan : 0,
+                        thanhTien: medicine ? detail.soLuongBan * medicine.giaBan : 0
                     };
                 });
                 setInvoiceDetails(invoiceDetails);
@@ -92,26 +108,18 @@ function invoices() {
         if (idSelected) {
             fetchData();
         }
-    }, [idSelected, listMedicine]);    
+    }, [idSelected, listMedicine, listInvoices]);    
     
     const getColumnSearchProps = (dataIndex) => ({
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div
-                style={{
-                    padding: 8,
-                }}
-                onKeyDown={(e) => e.stopPropagation()}
-            >
+            <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
                 <Input
                     ref={searchInput}
                     placeholder={`Search ${dataIndex}`}
                     value={selectedKeys[0]}
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
                     onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{
-                        marginBottom: 8,
-                        display: 'block',
-                    }}
+                    style={{ marginBottom: 8, display: 'block' }}
                 />
                 <Space>
                     <Button
@@ -119,18 +127,14 @@ function invoices() {
                         onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
                         icon={<SearchOutlined />}
                         size="small"
-                        style={{
-                            width: 90,
-                        }}
+                        style={{ width: 90 }}
                     >
                         Search
                     </Button>
                     <Button
                         onClick={() => clearFilters && handleReset(clearFilters)}
                         size="small"
-                        style={{
-                            width: 90,
-                        }}
+                        style={{ width: 90 }}
                     >
                         Reset
                     </Button>
@@ -138,21 +142,14 @@ function invoices() {
             </div>
         ),
         filterIcon: (filtered) => (
-            <SearchOutlined
-                style={{
-                    color: filtered ? '#1677ff' : undefined,
-                }}
-            />
+            <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
         ),
         onFilter: (value, record) =>
             record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
         render: (text) =>
             searchedColumn === dataIndex ? (
                 <Highlighter
-                    highlightStyle={{
-                        backgroundColor: '#ffc069',
-                        padding: 0,
-                    }}
+                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
                     searchWords={[searchText]}
                     autoEscape
                     textToHighlight={text ? text.toString() : ''}
@@ -212,6 +209,99 @@ function invoices() {
         }
     ];       
 
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+    const generatePDF = () => {
+        if (!invoiceData || !invoiceDetails) {
+            alert('Không có hóa đơn để in.');
+            return;
+        }
+    
+        const docDefinition = {
+            content: [
+                {
+                    text: 'HÓA ĐƠN BÁN THUỐC',
+                    fontSize: 16,
+                    bold: true,
+                    alignment: 'center',  // Canh giữa tiêu đề
+                    margin: [0, 0, 0, 20],  // Thêm margin phía dưới tiêu đề
+                },
+                {
+                    text: `Khách hàng: ${customerInfo.tenKH}`,  // Sử dụng thông tin khách hàng đã lưu
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Số điện thoại: ${customerInfo.sdtKH}`,  // Sử dụng số điện thoại đã lưu
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Ngày lập: ${new Date(invoiceData.ngayBan).toLocaleDateString()}`,
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Nhân viên thực hiện: ${invoiceData.tenNV || 'Không rõ'}`,
+                    margin: [0, 0, 0, 20],
+                },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['*', 'auto', 'auto', 'auto'],
+                        body: [
+                            ['Tên thuốc', 'Số lượng', 'Đơn giá', 'Thành tiền'],
+                            ...invoiceDetails.map(detail => [
+                                detail.tenThuoc, 
+                                detail.soLuongBan, 
+                                `${detail.giaBan.toLocaleString()} VND`, 
+                                `${detail.thanhTien.toLocaleString()} VND`
+                            ])
+                        ],
+                    },
+                    margin: [0, 20, 0, 0],
+                },
+                {
+                    text: `Tổng giá: ${invoiceData.tongGia.toLocaleString()} VND`,
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 20, 0, 0]
+                }
+            ],
+        };
+    
+        pdfMake.createPdf(docDefinition).download(`hoa_don_${new Date().getTime()}.pdf`);
+    };
+
+    const handleDeleteInvoice = () => {
+        // Hiển thị hộp thoại xác nhận trước khi xóa
+        Modal.confirm({
+            title: 'Xác nhận xóa',
+            content: 'Bạn có chắc chắn muốn xóa tất cả các thuốc trong hóa đơn này?',
+            okText: 'Xác nhận',
+            cancelText: 'Hủy bỏ',
+            onOk: () => {
+                // Nếu người dùng nhấn OK, thực hiện xóa
+                const fetchData = async () => {
+                    try {
+                        // Xóa chi tiết hóa đơn (thuốc trong hóa đơn)
+                        const res = await axiosCus.delete(`${URLDeleDetailByIDInvoice}${idSelected}`);
+                        // Xóa hóa đơn
+                        const res2 = await axiosCus.delete(`${URLDeleteInvoice}${idSelected}`);
+                        console.log(res);
+                        console.log(res2);
+                        setIsUpdate(!isUpdate);
+                        setInvoiceData(null);
+                        setInvoiceDetails(null);
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                    }
+                };
+                fetchData();
+            },
+            onCancel() {
+                console.log('Hủy xóa hóa đơn');
+            }
+        });
+    };
+    
     return (
         <>
         <div className="wrap-invoices d-flex">
@@ -219,7 +309,7 @@ function invoices() {
                 className="table-medicine table-invoices"
                 columns={columns}
                 dataSource={listInvoices}
-                rowKey="maHD"  // Sửa lại rowKey thành maHD
+                rowKey="maHD"
                 pagination={{ pageSize: 10 }} 
                 onRow={(record) => ({
                     onClick: () => {
@@ -233,32 +323,45 @@ function invoices() {
 
             <div className="sec-infoMedicine sec-invoices">
                 <h3 className="mb-3">THÔNG TIN HÓA ĐƠN</h3>
-                {invoiceDetails && invoiceDetails.length > 0 ? (
+                {invoiceData && (
                     <>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Tên thuốc</th>
-                                <th>Số lượng</th>
-                                <th>Đơn giá</th> {/* Display giaBan here */}
-                                <th>Thành tiền</th> {/* Display thanhTien here */}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {invoiceDetails.map((detail, index) => (
-                                <tr key={index}>
-                                    <td>{detail.tenThuoc}</td>
-                                    <td>{detail.soLuongBan}</td> {/* Use soLuongBan for quantity */}
-                                    <td>{detail.giaBan.toLocaleString()} VND</td> {/* Display giaBan */}
-                                    <td>{detail.thanhTien.toLocaleString()} VND</td> {/* Display thanhTien */}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <h5>Tổng tiền: {invoiceData.tongGia.toLocaleString()} VND</h5>
+                        <p><strong>Khách hàng:</strong> {customerInfo.tenKH}</p>
+                        <p><strong>Số điện thoại:</strong> {customerInfo.sdtKH}</p>
+                        <p><strong>Nhân viên thực hiện:</strong> {invoiceData.tenNV}</p>
+                        {invoiceDetails && invoiceDetails.length > 0 ? (
+                            <>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên thuốc</th>
+                                            <th>Số lượng</th>
+                                            <th>Đơn giá</th>
+                                            <th>Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {invoiceDetails.map((detail, index) => (
+                                            <tr key={index}>
+                                                <td>{detail.tenThuoc}</td>
+                                                <td>{detail.soLuongBan}</td>
+                                                <td>{detail.giaBan.toLocaleString()} VND</td>
+                                                <td>{detail.thanhTien.toLocaleString()} VND</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <h5>Tổng tiền: {invoiceData.tongGia.toLocaleString()} VND</h5>
+                            </>
+                        ) : (
+                            <p className="text-center">Chọn 1 hóa đơn để xem thông tin chi tiết.</p>
+                        )}
+                        <Button onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
+                            In Hóa Đơn
+                        </Button>
+                        <Button onClick={handleDeleteInvoice} type="primary" style={{ marginTop: '20px' }}>
+                            Xóa Hóa Đơn
+                        </Button>
                     </>
-                ) : (
-                    <p>Không có thông tin chi tiết.</p>
                 )}
             </div>
         </div>

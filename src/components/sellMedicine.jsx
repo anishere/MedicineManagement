@@ -28,6 +28,7 @@ function SellMedicine() {
     });
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [employees, setEmployees] = useState()
     
     useEffect(() => {
         const fetchData = async () => {
@@ -174,6 +175,18 @@ function SellMedicine() {
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
     const generatePDF = () => {
+        const employeeID = localStorage.getItem('maNV');
+
+        const fetchData = async () => {
+            try {
+                const res = await axiosCus.get(`${URLEmployeID}${employeeID}`);
+                setEmployees(res.listNhanVien[0]);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchData();
+
         const docDefinition = {
             content: [
                 {
@@ -197,6 +210,10 @@ function SellMedicine() {
                 },
                 {
                     text: `Giờ lập hóa đơn: ${new Date().toLocaleTimeString()}`,  // Include both date and time
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    text: `Nhân viên thực hiện: ${employees.tenNV}`,  
                     margin: [0, 0, 0, 20],
                 },
                 {

@@ -148,6 +148,7 @@
 .wrap-invoices .sec-invoices {
   margin-top: 0;
   width: 35%;
+  padding: 0;
 }
 
 /* Invoices end */
