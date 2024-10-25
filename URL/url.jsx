@@ -26,6 +26,8 @@ export const URLCreateInvoice = 'HoaDon/AddHoaDon'
 export const URLListInvouces = 'HoaDon/ListHoaDon'
 export const URLGetInvoice = 'HoaDon/GetHoaDon/'
 export const URLDeleteInvoice = 'HoaDon/DeleteHoaDon/'
+// from server
+export const URLGetInvoiceFromServer = 'HoaDon/RevenueStatistics/'
 
 //Details Invoice
 export const URLDetailsInvoice = 'ThuocTrongHD/ListThuocTrongHD/'
