@@ -20,8 +20,13 @@ const RevenueByMonthChart = ({ data }) => {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
+          <YAxis
+            tickFormatter={(value) => value.toLocaleString()} // Định dạng giá trị trên trục Y
+          />
+          <Tooltip
+            formatter={(value) => value.toLocaleString()} // Định dạng giá trị trên tooltip
+            labelFormatter={(label) => `${label}`}
+          />
           <Legend />
           <Bar dataKey="total" fill="#82ca9d" name="Doanh thu (VND)" />
         </BarChart>

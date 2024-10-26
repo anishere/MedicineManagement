@@ -324,30 +324,14 @@ function MedicineManagement() {
                 });
         }
     };
-
+    
     const handleAddMedicine = () => {
         // Kiểm tra nếu MaThuoc đã tồn tại trong listMedicine
-        const isDuplicate = listMedicine.some(med => med.MaThuoc === medicine.MaThuoc);
+        const isDuplicate = listMedicine.some(med => med.MaThuoc === medicine.maThuoc);
     
         if (isDuplicate) {
-            // Nếu MaThuoc trùng, thông báo cho người dùng
-            toast.warn('Mã thuốc đã tồn tại, hãy nhập mã khác', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-                });
-            return; // Không thực hiện thêm thuốc
-        }
-
-        if (medicine.MaDanhMuc === '' || medicine.NgaySanXuat === '' || medicine.NgayHetHan === '' || medicine.MaThuoc === '') {
-            // Nếu mã thuốc chưa được nhập, thông báo cho người dùng
-            toast.warn('Vui lòng điển đủ thông tin yêu cầu để thêm', {
+            // Nếu mã thuốc đã tồn tại, thông báo cho người dùng và dừng thêm mới
+            toast.warn('Mã thuốc đã tồn tại, vui lòng nhập mã khác', {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -358,10 +342,26 @@ function MedicineManagement() {
                 theme: "light",
                 transition: Bounce,
             });
-            return; // Dừng thực hiện khi không có mã thuốc
+            return; // Kết thúc hàm, không tiến hành thêm
         }
     
-            // Nếu không trùng, tiến hành thêm thuốc
+        // Kiểm tra thông tin bắt buộc
+        if (medicine.MaDanhMuc === '' || medicine.NgaySanXuat === '' || medicine.NgayHetHan === '' || medicine.MaThuoc === '') {
+            toast.warn('Vui lòng điền đủ thông tin yêu cầu để thêm', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            });
+            return;
+        }
+    
+        // Tiến hành thêm thuốc mới nếu mã thuốc không tồn tại
         const fetchData = async () => {
             try {
                 const res = await axiosCus.post(URLAddMedicine, medicine);
@@ -376,25 +376,26 @@ function MedicineManagement() {
                     progress: undefined,
                     theme: "light",
                     transition: Bounce,
-                    });
+                });
                 setIsUpdate(!isUpdate);
             } catch (error) {
                 console.error('Lỗi thêm sản phẩm', error);
-                toast.error('Cập nhật thất bại',error.message, {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
+                toast.error('Thêm thuốc thất bại', {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                    transition: Bounce,
                 });
-            }        
+            }
         };
         fetchData();
-    };    
+    };
+            
 
     const handleClearDataMedi = () => {
         setMedicine({

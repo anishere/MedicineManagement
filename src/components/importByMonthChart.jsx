@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
-// RevenueByDateChart.js
+// ImportByMonthChart.js
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const RevenueByDateChart = ({ data }) => {
+const ImportByMonthChart = ({ data }) => {
   return (
     <div className="card p-3">
-      <h4 className="text-center">Doanh thu theo ngày</h4>
+      <h4 className="text-center">Tiền nhập theo tháng</h4>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={data}
@@ -28,11 +28,11 @@ const RevenueByDateChart = ({ data }) => {
             labelFormatter={(label) => `${label}`}
           />
           <Legend />
-          <Bar dataKey="total" fill="#8884d8" name="Doanh thu (VND)" />
+          <Bar dataKey="total" fill="#8884d8" name="Tiền nhập (VND)" />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-export default RevenueByDateChart;
+export default ImportByMonthChart;

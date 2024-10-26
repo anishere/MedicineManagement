@@ -36,4 +36,9 @@ export const URLDeleDetailByIDInvoice = 'ThuocTrongHD/DeleteAllThuocTrongHD/'
 //Medicine in Invoice
 export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'
 
+// Cung cap
+export const URLListCungCap = 'CungCap/ListCungCap'
+
+
+
 export const ChiNhanh = 'CN001'
