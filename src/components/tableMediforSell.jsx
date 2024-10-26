@@ -73,11 +73,17 @@ const MedicineTable = ({ listMedicine, getIDMedicine }) => {
         { title: 'Giá', dataIndex: 'giaBan', key: 'giaBan' },
         { title: 'Đơn vị', dataIndex: 'dvt', key: 'dvt' },
         { title: 'Kê Đơn', dataIndex: 'keDon', key: 'keDon', ...getColumnSearchProps('keDon') },
+        { title: 'Số lượng', dataIndex: 'soLuongThuocCon', key: 'soLuongThuocCon' }, // Thêm cột Số lượng
         {
             title: 'Thêm',
             key: 'action',
             render: (record) => (
-                <Button type="primary" onClick={() => getIDMedicine(record.maThuoc, record.tenThuoc, record.giaBan)}>
+                <Button
+                    type="primary"
+                    onClick={() =>
+                        getIDMedicine(record.maThuoc, record.tenThuoc, record.giaBan, record.soLuongThuocCon)
+                    }
+                >
                     Thêm
                 </Button>
             ),

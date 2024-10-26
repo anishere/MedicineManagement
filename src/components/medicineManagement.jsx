@@ -7,9 +7,15 @@ import { FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import TextArea from "antd/es/input/TextArea";
 import { Bounce, toast } from "react-toastify";
+import dayjs from "dayjs";
 
 function MedicineManagement() {
     const [listMedicine, setListMedicine] = useState([]);
+    const [filteredMedicine, setFilteredMedicine] = useState([]); // Lưu thuốc sau khi lọc
+    const [isExpiredFilter, setIsExpiredFilter] = useState(false); // Kiểm tra trạng thái lọc thuốc hết hạn
+    const [isNearExpiryFilter, setIsNearExpiryFilter] = useState(false);
+    const [currentFilterLabel, setCurrentFilterLabel] = useState("Danh sách thuốc (tất cả)");
+
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
@@ -41,13 +47,50 @@ function MedicineManagement() {
         const fetchData = async () => {
             try {
                 const res = await axiosCus.get(URLListMedicine);
-                setListMedicine(res.listMedicine); 
+                const formattedData = res.listMedicine.map(medicine => ({
+                    ...medicine,
+                    ngaySanXuatFormatted: dayjs(medicine.ngaySanXuat).format('DD/MM/YYYY'),
+                    ngayHetHanFormatted: dayjs(medicine.ngayHetHan).format('DD/MM/YYYY')
+                }));
+                setListMedicine(formattedData); 
+                setFilteredMedicine(formattedData); // Ban đầu hiển thị tất cả thuốc
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
         fetchData();
     }, [isUpdate]);
+
+    // Lọc thuốc hết hạn
+    const filterExpiredMedicines = () => {
+        const currentDate = dayjs();
+        const expired = listMedicine.filter(medicine => dayjs(medicine.ngayHetHan).isBefore(currentDate));
+        setFilteredMedicine(expired);
+        setIsExpiredFilter(true);
+        setIsNearExpiryFilter(false); // Đảm bảo lọc riêng biệt
+        setCurrentFilterLabel("Danh sách thuốc hết hạn");
+    };
+
+    // Lọc thuốc gần hết hạn
+    const filterNearExpiryMedicines = () => {
+        const currentDate = dayjs();
+        const nearExpiry = listMedicine.filter(medicine => 
+            dayjs(medicine.ngayHetHan).isAfter(currentDate) && 
+            dayjs(medicine.ngayHetHan).diff(currentDate, 'month') < 1
+        );
+        setFilteredMedicine(nearExpiry);
+        setIsNearExpiryFilter(true);
+        setIsExpiredFilter(false); // Đảm bảo lọc riêng biệt
+        setCurrentFilterLabel("Danh sách thuốc gần hết hạn"); 
+    };
+    
+    // Hiển thị tất cả thuốc
+    const showAllMedicines = () => {
+        setFilteredMedicine(listMedicine);
+        setIsExpiredFilter(false);
+        setIsNearExpiryFilter(false);
+        setCurrentFilterLabel("Danh sách thuốc (tất cả)");
+    };
 
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
@@ -134,66 +177,28 @@ function MedicineManagement() {
 
     // Cấu hình cột cho bảng
     const columns = [
-        {
-            title: 'Mã',
-            dataIndex: 'maThuoc', // Cập nhật thành MaThuoc
-            key: 'maThuoc',
-            ...getColumnSearchProps('maThuoc'),
+        { title: 'Mã', dataIndex: 'maThuoc', key: 'maThuoc', ...getColumnSearchProps('maThuoc') },
+        { title: 'Tên', dataIndex: 'tenThuoc', key: 'tenThuoc', ...getColumnSearchProps('tenThuoc') },
+        { title: 'Danh mục', dataIndex: 'maDanhMuc', key: 'maDanhMuc', ...getColumnSearchProps('maDanhMuc') },
+        { title: 'Số lượng', dataIndex: 'soLuongThuocCon', key: 'soLuongThuocCon' },
+        { title: 'Giá', dataIndex: 'giaBan', key: 'giaBan' },
+        { title: 'Đơn vị', dataIndex: 'dvt', key: 'dvt' },
+        { 
+            title: 'Ngày sản xuất', 
+            dataIndex: 'ngaySanXuatFormatted', // Hiển thị ngày đã định dạng
+            key: 'ngaySanXuat', 
+            render: (text) => text, // Hiển thị ngày, tháng, năm đã định dạng
+            ...getColumnSearchProps('ngaySanXuat') // Lọc vẫn dùng trường gốc `ngaySanXuat`
         },
-        {
-            title: 'Tên',
-            dataIndex: 'tenThuoc', // Cập nhật thành TenThuoc
-            key: 'tenThuoc',
-            ...getColumnSearchProps('tenThuoc'),
+        { 
+            title: 'Ngày hết hạn', 
+            dataIndex: 'ngayHetHanFormatted', // Hiển thị ngày đã định dạng
+            key: 'ngayHetHan', 
+            render: (text) => text, // Hiển thị ngày, tháng, năm đã định dạng
+            ...getColumnSearchProps('ngayHetHan') // Lọc vẫn dùng trường gốc `ngayHetHan`
         },
-        {
-            title: 'Danh mục',
-            dataIndex: 'maDanhMuc', // Cập nhật thành MaDanhMuc
-            key: 'maDanhMuc',
-            ...getColumnSearchProps('maDanhMuc'),
-        },
-        {
-            title: 'Số lượng',
-            dataIndex: 'soLuongThuocCon', // Cập nhật thành SoLuongThuocCon
-            key: 'soLuongThuocCon',
-            ...getColumnSearchProps('soLuongThuocCon'),
-        },
-        {
-            title: 'Giá',
-            dataIndex: 'giaBan', // Cập nhật thành GiaBan
-            key: 'giaBan',
-            ...getColumnSearchProps('giaBan'),
-        },
-        // {
-        //     title: 'Supplier',
-        //     dataIndex: 'nhaCungCap', // Cập nhật thành NhaCungCap
-        //     key: 'nhaCungCap',
-        //     ...getColumnSearchProps('nhaCungCap'),
-        // },
-        {
-            title: 'Đơn vị',
-            dataIndex: 'dvt', // Cập nhật thành DVT
-            key: 'dvt',
-            ...getColumnSearchProps('dvt'),
-        },
-        {
-            title: 'Ngày sản xuất',
-            dataIndex: 'ngaySanXuat',
-            key: 'ngaySanXuat',
-            render: (text) => new Date(text).toLocaleDateString('vi-VN'), // Hiển thị ngày theo định dạng 'dd/MM/yyyy'
-        },
-        {
-            title: 'Ngày hết hạn',
-            dataIndex: 'ngayHetHan',
-            key: 'ngayHetHan',
-            render: (text) => new Date(text).toLocaleDateString('vi-VN'), // Hiển thị ngày theo định dạng 'dd/MM/yyyy'
-        },
-        {
-            title: 'Kê Đơn',
-            dataIndex: 'keDon', 
-            key: 'keDon',
-        },
-    ];
+        { title: 'Kê Đơn', dataIndex: 'keDon', key: 'keDon', ...getColumnSearchProps('keDon') },
+    ];    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -484,10 +489,36 @@ function MedicineManagement() {
     return (
     <>
         <div className="wrap-medicine">
+            <div className="filter-buttons mb-3">
+                <Button 
+                    type="primary" 
+                    onClick={filterExpiredMedicines} 
+                    disabled={isExpiredFilter}
+                    className="me-2"
+                >
+                    Lọc thuốc hết hạn
+                </Button>
+                <Button 
+                    type="warning" 
+                    onClick={filterNearExpiryMedicines} 
+                    disabled={isNearExpiryFilter}
+                    className="me-2"
+                >
+                    Lọc thuốc gần hết hạn
+                </Button>
+                <Button 
+                    onClick={showAllMedicines} 
+                    disabled={!isExpiredFilter && !isNearExpiryFilter}
+                >
+                    Hiện tất cả thuốc
+                </Button>
+            </div>
+
+            <h4 className="mb-3">{currentFilterLabel}</h4>
             <Table
                 className="table-medicine"
                 columns={columns}
-                dataSource={listMedicine} // Sử dụng danh sách thuốc
+                dataSource={filteredMedicine} // Sử dụng danh sách thuốc
                 rowKey="maThuoc" // Đặt key cho mỗi dòng
                 pagination={{ pageSize: 10 }} // Chia trang
                 onRow={(record) => ({
