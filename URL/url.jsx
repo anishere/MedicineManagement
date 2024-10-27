@@ -20,6 +20,9 @@ export const URLEmployeID = 'NhanVien/GetNhanVien/'
 export const URLListCustomer = 'KhachHang/ListKhachHang'
 export const URLCustomerbyPhone = 'KhachHang/GetKhachHang/'
 export const URLGetCusByID = 'KhachHang/GetKhachHangByID/'
+export const URLAddCustomer = 'KhachHang/AddKhachHang'
+export const URLUpdateCustomer = 'KhachHang/UpdateKhachHang/'
+export const URLDeleCustomer = 'KhachHang/DeleteKhachHang/'
 
 //Invoice
 export const URLCreateInvoice = 'HoaDon/AddHoaDon'

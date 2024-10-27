@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { URLAddMedicine, URLCategory, URLDeleteMedicine, URLListMedicine, URLMedicineByID, URLUpdateMedicine, URLUploadImg } from "../../URL/url";
 import { axiosCus } from "../axios/axios";
-import { Table, Input, Button, Space } from "antd";
+import { Table, Input, Button, Space, Modal } from "antd";
 import { FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import TextArea from "antd/es/input/TextArea";
@@ -327,7 +327,7 @@ function MedicineManagement() {
     
     const handleAddMedicine = () => {
         // Kiểm tra nếu MaThuoc đã tồn tại trong listMedicine
-        const isDuplicate = listMedicine.some(med => med.MaThuoc === medicine.maThuoc);
+        const isDuplicate = listMedicine.some(med => med.MaThuoc === medicine.MaThuoc);
     
         if (isDuplicate) {
             // Nếu mã thuốc đã tồn tại, thông báo cho người dùng và dừng thêm mới
@@ -394,8 +394,7 @@ function MedicineManagement() {
             }
         };
         fetchData();
-    };
-            
+    };          
 
     const handleClearDataMedi = () => {
         setMedicine({
@@ -417,11 +416,10 @@ function MedicineManagement() {
     }
     
     const handleDeleteMedicine = () => {
-        // Kiểm tra nếu MaThuoc không tồn tại trong listMedicine
+        // Kiểm tra nếu mã thuốc không tồn tại trong listMedicine
         const isExist = listMedicine.some(med => med.maThuoc === idSelected);
     
         if (medicine.MaThuoc === '') {
-            // Nếu mã thuốc chưa được nhập, thông báo cho người dùng
             toast.warn('Vui lòng nhập mã thuốc để xóa', {
                 position: "top-right",
                 autoClose: 5000,
@@ -437,7 +435,6 @@ function MedicineManagement() {
         }
     
         if (!isExist) {
-            // Nếu mã thuốc không tồn tại, thông báo cho người dùng
             toast.warn('Mã thuốc không tồn tại, không thể xóa', {
                 position: "top-right",
                 autoClose: 5000,
@@ -452,40 +449,49 @@ function MedicineManagement() {
             return; // Dừng thực hiện nếu mã thuốc không tồn tại
         }
     
-        // Nếu mã thuốc tồn tại, tiến hành xóa thuốc
-        const fetchData = async () => {
-            try {
-                const res = await axiosCus.delete(`${URLDeleteMedicine}${idSelected}`);
-                console.log('Medicine deleted successfully:', res.data);
-                toast.success('Xóa thuốc thành công', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
-                setIsUpdate(!isUpdate); // Cập nhật lại danh sách
-            } catch (error) {
-                console.error('Lỗi khi xóa sản phẩm', error);
-                toast.error('Xóa thuốc thất bại', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+        // Hiển thị hộp thoại xác nhận trước khi xóa
+        Modal.confirm({
+            title: 'Xác nhận xóa',
+            content: 'Bạn có chắc chắn muốn xóa thuốc này?',
+            okText: 'Xác nhận',
+            cancelText: 'Hủy bỏ',
+            onOk: async () => {
+                // Nếu người dùng nhấn OK, thực hiện xóa
+                try {
+                    const res = await axiosCus.delete(`${URLDeleteMedicine}${idSelected}`);
+                    console.log('Medicine deleted successfully:', res.data);
+                    toast.success('Xóa thuốc thành công', {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        theme: "light",
+                        transition: Bounce,
+                    });
+                    setIsUpdate(!isUpdate); // Cập nhật lại danh sách
+                } catch (error) {
+                    console.error('Lỗi khi xóa sản phẩm', error);
+                    toast.error('Xóa thuốc thất bại', {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        theme: "light",
+                        transition: Bounce,
+                    });
+                }
+            },
+            onCancel() {
+                console.log('Hủy xóa thuốc');
             }
-        };
-        fetchData();
-    };    
+        });
+    };              
      
     return (
     <>

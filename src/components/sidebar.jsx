@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { UserOutlined, ProfileOutlined, LoginOutlined, CarryOutOutlined, SettingOutlined, FormOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import { UserOutlined, ProfileOutlined, LoginOutlined, CarryOutOutlined, SettingOutlined, FormOutlined, UserSwitchOutlined, UsergroupAddOutlined } from "@ant-design/icons";
 import { Flex, Menu } from "antd";
 import { FaUserDoctor } from "react-icons/fa6";
 import { Link } from "react-router-dom"; // Import Link
@@ -33,23 +33,27 @@ function Sidebar() {
                     </Menu.Item>
                 </SubMenu>
 
-                <Menu.Item key='3' icon={<UserSwitchOutlined />}>
+                <Menu.Item key='3' icon={<UsergroupAddOutlined />}>
+                    <Link to='/customerManagement'>Quản lý khách hàng</Link>
+                </Menu.Item>
+
+                <Menu.Item key='4' icon={<UserSwitchOutlined />}>
                     <Link to='/accountManagement'>Quản lý tài khoản</Link> {/* Điều hướng đến "/accounts" */}
                 </Menu.Item>
 
-                <Menu.Item key='4' icon={<CarryOutOutlined />}>
+                <Menu.Item key='5' icon={<CarryOutOutlined />}>
                     <Link to='/notes'>Ghi chú</Link> {/* Điều hướng đến "/notes" */}
                 </Menu.Item>
 
-                <Menu.Item key='5' icon={<ProfileOutlined />}>
+                <Menu.Item key='6' icon={<ProfileOutlined />}>
                     <Link to='/profile'>Cá nhân</Link> {/* Điều hướng đến "/profile" */}
                 </Menu.Item>
 
-                <Menu.Item key='6' icon={<SettingOutlined />}>
+                <Menu.Item key='7' icon={<SettingOutlined />}>
                     <Link to='/settings'>Cài đặt</Link> {/* Điều hướng đến "/settings" */}
                 </Menu.Item>
 
-                <Menu.Item key='7' icon={<LoginOutlined />}>
+                <Menu.Item key='8' icon={<LoginOutlined />}>
                     <Link to='/logout'>Thoát</Link> {/* Điều hướng đến "/logout" */}
                 </Menu.Item>
             </Menu>

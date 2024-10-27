@@ -11,118 +11,107 @@ import RevenueByMonthChart from './revenueByMonthChart';
 import RevenuePieChart from './revenuePieChart';
 import MedicineExpiryChart from './medicineExpiryChart';
 import ImportByMonthChart from './importByMonthChart';
+import ProfitByMonthChart from './profitByMonthChart';
 
 const Dashboard = () => {
-  // State chung
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State cho biểu đồ doanh thu theo ngày
+  // State cho các biểu đồ và năm/tháng được chọn
   const [revenueDataByDate, setRevenueDataByDate] = useState([]);
   const [selectedRevenueYear, setSelectedRevenueYear] = useState(dayjs().year());
   const [selectedRevenueMonth, setSelectedRevenueMonth] = useState(dayjs().month() + 1);
   const [availableRevenueYears, setAvailableRevenueYears] = useState([]);
   const [availableRevenueMonths, setAvailableRevenueMonths] = useState([]);
-
-  // State cho biểu đồ doanh thu theo tháng
   const [dataByMonth, setDataByMonth] = useState([]);
   const [selectedMonthYear, setSelectedMonthYear] = useState(dayjs().year());
   const [availableMonthYears, setAvailableMonthYears] = useState([]);
-
-  // State cho biểu đồ tiền nhập theo tháng
   const [importDataByMonth, setImportDataByMonth] = useState([]);
   const [selectedImportYear, setSelectedImportYear] = useState(dayjs().year());
   const [availableImportYears, setAvailableImportYears] = useState([]);
-
-  // State cho biểu đồ tỉ lệ doanh thu
   const [revenueData, setRevenueData] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
-
-  // State cho biểu đồ thuốc hết hạn
   const [listMedicine, setListMedicine] = useState([]);
+  const [profitDataByMonth, setProfitDataByMonth] = useState([]);
+  
+  // State cho năm và dữ liệu lợi nhuận theo tháng
+  const [selectedProfitYear, setSelectedProfitYear] = useState(dayjs().year());
+  const [availableProfitYears, setAvailableProfitYears] = useState([]);
+  
+  useEffect(() => {
+    // Cập nhật năm khả dụng cho lợi nhuận từ các năm doanh thu và tiền nhập
+    const profitYears = new Set([...availableMonthYears, ...availableImportYears]);
+    setAvailableProfitYears(Array.from(profitYears).sort((a, b) => a - b));
+  }, [availableMonthYears, availableImportYears]);
 
   useEffect(() => {
-    // Hàm fetch dữ liệu cho biểu đồ doanh thu theo ngày
+    // Fetch dữ liệu doanh thu theo ngày
     const fetchRevenueData = async () => {
       try {
         const res = await axiosCus.get(URLListInvouces);
-        if (res && res.listHoaDon && res.listHoaDon.length > 0) {
-          const invoices = res.listHoaDon;
-          const revenueByDate = {};
-          const revenueYears = new Set();
-          const revenueMonths = new Set();
+        const invoices = res.listHoaDon;
+        const revenueByDate = {};
+        const revenueYears = new Set();
+        const revenueMonths = new Set();
 
-          invoices.forEach(invoice => {
-            const date = dayjs(invoice.ngayBan).format('YYYY-MM-DD');
-            const month = dayjs(invoice.ngayBan).month() + 1;
-            const year = dayjs(invoice.ngayBan).year();
-            const total = invoice.tongGia;
+        invoices.forEach(invoice => {
+          const date = dayjs(invoice.ngayBan).format('YYYY-MM-DD');
+          const month = dayjs(invoice.ngayBan).month() + 1;
+          const year = dayjs(invoice.ngayBan).year();
+          const total = invoice.tongGia;
 
-            revenueYears.add(year);
-            if (year === selectedRevenueYear) {
-              revenueMonths.add(month);
-              if (month === selectedRevenueMonth) {
-                revenueByDate[date] = (revenueByDate[date] || 0) + total;
-              }
+          revenueYears.add(year);
+          if (year === selectedRevenueYear) {
+            revenueMonths.add(month);
+            if (month === selectedRevenueMonth) {
+              revenueByDate[date] = (revenueByDate[date] || 0) + total;
             }
-          });
+          }
+        });
 
-          const chartDataByDate = Object.keys(revenueByDate)
-            .map(date => ({
-              name: date,
-              total: revenueByDate[date],
-            }))
-            .sort((a, b) => new Date(a.name) - new Date(b.name));
+        const chartDataByDate = Object.keys(revenueByDate)
+          .map(date => ({ name: date, total: revenueByDate[date] }))
+          .sort((a, b) => new Date(a.name) - new Date(b.name));
 
-          setRevenueDataByDate(chartDataByDate);
-          setAvailableRevenueYears(Array.from(revenueYears).sort((a, b) => a - b));
-          setAvailableRevenueMonths(Array.from(revenueMonths).sort((a, b) => a - b));
-        } else {
-          throw new Error('Không có dữ liệu hóa đơn');
-        }
+        setRevenueDataByDate(chartDataByDate);
+        setAvailableRevenueYears(Array.from(revenueYears).sort((a, b) => a - b));
+        setAvailableRevenueMonths(Array.from(revenueMonths).sort((a, b) => a - b));
       } catch (error) {
         console.error("Error fetching revenue data:", error.message);
       }
     };
 
-    // Hàm fetch dữ liệu cho biểu đồ doanh thu theo tháng
+    // Fetch dữ liệu doanh thu theo tháng
     const fetchMonthlyRevenueData = async () => {
       try {
         const res = await axiosCus.get(URLListInvouces);
-        if (res && res.listHoaDon && res.listHoaDon.length > 0) {
-          const invoices = res.listHoaDon;
-          const revenueByMonth = {};
-          const monthYears = new Set();
+        const invoices = res.listHoaDon;
+        const revenueByMonth = {};
+        const monthYears = new Set();
 
-          invoices.forEach(invoice => {
-            const month = dayjs(invoice.ngayBan).month() + 1;
-            const year = dayjs(invoice.ngayBan).year();
-            const total = invoice.tongGia;
+        invoices.forEach(invoice => {
+          const month = dayjs(invoice.ngayBan).month() + 1;
+          const year = dayjs(invoice.ngayBan).year();
+          const total = invoice.tongGia;
 
-            monthYears.add(year);
-            if (year === selectedMonthYear) {
-              revenueByMonth[month] = (revenueByMonth[month] || 0) + total;
-            }
-          });
+          monthYears.add(year);
+          if (year === selectedMonthYear) {
+            revenueByMonth[month] = (revenueByMonth[month] || 0) + total;
+          }
+        });
 
-          const chartDataByMonth = Object.keys(revenueByMonth)
-            .map(month => ({
-              name: `Tháng ${month}`,
-              total: revenueByMonth[month],
-            }))
-            .sort((a, b) => parseInt(a.name.split(" ")[1]) - parseInt(b.name.split(" ")[1]));
+        const chartDataByMonth = Object.keys(revenueByMonth)
+          .map(month => ({ name: `Tháng ${month}`, total: revenueByMonth[month] }))
+          .sort((a, b) => parseInt(a.name.split(" ")[1]) - parseInt(b.name.split(" ")[1]));
 
-          setDataByMonth(chartDataByMonth);
-          setAvailableMonthYears(Array.from(monthYears).sort((a, b) => a - b));
-        } else {
-          throw new Error('Không có dữ liệu hóa đơn');
-        }
+        setDataByMonth(chartDataByMonth);
+        setAvailableMonthYears(Array.from(monthYears).sort((a, b) => a - b));
       } catch (error) {
         setError(error.message);
       }
     };
 
-    // Hàm fetch dữ liệu cho biểu đồ tiền nhập theo tháng
+    // Fetch dữ liệu tiền nhập theo tháng
     const fetchImportData = async () => {
       try {
         const response = await axiosCus.get(URLListCungCap);
@@ -142,10 +131,7 @@ const Dashboard = () => {
         });
 
         const chartDataByMonth = Object.keys(importByMonth)
-          .map(month => ({
-            name: `Tháng ${month}`,
-            total: importByMonth[month],
-          }))
+          .map(month => ({ name: `Tháng ${month}`, total: importByMonth[month] }))
           .sort((a, b) => parseInt(a.name.split(" ")[1]) - parseInt(b.name.split(" ")[1]));
 
         setImportDataByMonth(chartDataByMonth);
@@ -155,12 +141,12 @@ const Dashboard = () => {
       }
     };
 
-    // Hàm fetch dữ liệu cho biểu đồ tỉ lệ doanh thu
+    // Fetch dữ liệu doanh thu
     const fetchRevenueStatistics = async () => {
       try {
         const response = await axiosCus.get(`${URLGetInvoiceFromServer}${ChiNhanh}`);
         const data = response;
-        
+
         const revenueInfo = [
           { name: 'Doanh thu chi nhánh', value: data.branchRevenue, percentage: data.branchPercentage.toFixed(2) },
           { name: 'Các chi nhánh khác', value: data.totalRevenue - data.branchRevenue, percentage: (100 - data.branchPercentage).toFixed(2) },
@@ -173,7 +159,7 @@ const Dashboard = () => {
       }
     };
 
-    // Hàm fetch dữ liệu thuốc
+    // Fetch dữ liệu thuốc hết hạn
     const fetchMedicineData = async () => {
       try {
         const response = await axiosCus.get(URLListMedicine);
@@ -189,6 +175,24 @@ const Dashboard = () => {
     fetchRevenueStatistics();
     fetchMedicineData();
   }, [selectedRevenueYear, selectedRevenueMonth, selectedMonthYear, selectedImportYear]);
+
+  // Cập nhật dữ liệu lợi nhuận theo năm
+  useEffect(() => {
+    const calculateProfitData = () => {
+      const profitByMonth = dataByMonth.map((revenueItem, index) => {
+        const importItem = importDataByMonth[index] || { total: 0 };
+        return {
+          name: revenueItem.name,
+          revenue: revenueItem.total,
+          importCost: importItem.total,
+          profit: revenueItem.total - importItem.total,
+        };
+      });
+      setProfitDataByMonth(profitByMonth);
+    };
+
+    calculateProfitData();
+  }, [dataByMonth, importDataByMonth, selectedProfitYear]);
 
   return (
     <div className="container mt-4">
@@ -281,6 +285,26 @@ const Dashboard = () => {
         </div>
       </div>
       <ImportByMonthChart data={importDataByMonth} />
+
+      {/* Biểu đồ lợi nhuận theo tháng */}
+      <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <h3 className="mb-0">Lợi nhuận theo tháng</h3>
+        <div className="d-flex align-items-center">
+          <label htmlFor="profitYearSelect" className="me-2">Chọn năm:</label>
+          <select
+            id="profitYearSelect"
+            value={selectedProfitYear}
+            onChange={(e) => setSelectedProfitYear(parseInt(e.target.value))}
+            className="form-select"
+            style={{ width: '100px' }}
+          >
+            {availableProfitYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <ProfitByMonthChart data={profitDataByMonth} />
     </div>
   );
 };

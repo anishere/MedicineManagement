@@ -8,7 +8,8 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import CusHeader from './components/cusHeader';
 import Dashboard from './components/dashboard';  // Component cho route Dashboard
 import MedicineManagement from './components/medicineManagement';  // Component cho route Medicine
-import AccountManagement from './components/accountManagement';  // Component cho route Accounts
+import AccountManagement from './components/accountManagement';
+import CustomerManagement from './components/customerManagement';  // Component cho route Accounts
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import SellMedicine from './components/sellMedicine';
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} /> {/* Mặc định là Dashboard */}
                 <Route path="/medicineManagement" element={<MedicineManagement />} />
                 <Route path="/sellMedicine" element={<SellMedicine />} />
+                <Route path="/customerManagement" element={<CustomerManagement />} />
                 <Route path="/accountManagement" element={<AccountManagement />} />
                 <Route path="/invoices" element={<Invoices />} />
               </Routes>
