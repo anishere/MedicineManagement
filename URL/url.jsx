@@ -11,6 +11,14 @@ export const URLCategory = 'DanhMuc/GetAllCategories'
 
 //Login 
 export const URLLogin = 'Account/Login'
+// Account
+export const URLListAccount = 'Account/ListUser'
+export const URLUserByID = 'Account/GetUserByID?userID='
+export const URLUpdateAccount = 'Account/UpdateAccount?userID='
+export const URLCreateAccount = 'Account/CreateAccount'
+export const URLChangePassword = 'Account/ChangePassword'
+export const URLDeleteAccount = 'Account/DeleteUser?userID='
+
 
 //Employe
 export const URLListEmployee = 'NhanVien/ListNhanVien'
@@ -41,6 +49,8 @@ export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'
 
 // Cung cap
 export const URLListCungCap = 'CungCap/ListCungCap'
+
+
 
 
 
