@@ -43,6 +43,18 @@ function MedicineManagement() {
         KhuVucLuuTru: '',
     });
 
+     // Hàm xử lý thay đổi của MaThuoc
+     const handleMaThuocChange = (e) => {
+        const newMaThuoc = e.target.value;
+    
+        setMedicine((prev) => ({
+            ...prev,
+            MaThuoc: newMaThuoc,
+            HinhAnh: newMaThuoc !== prev.MaThuoc ? '' : prev.HinhAnh, // Xóa ảnh nếu mã thuốc thay đổi
+            newImageFile: newMaThuoc !== prev.MaThuoc ? null : prev.newImageFile // Xóa file ảnh nếu mã thuốc thay đổi
+        }));
+    };    
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -259,7 +271,7 @@ function MedicineManagement() {
             HinhAnh: imageUrlPreview,
             newImageFile: file,  // Lưu file ảnh để gửi lên server sau
         }));
-    };
+    };    
     
     const handleUpdateMedicine = async () => {
         if ( idSelected !== '') {
@@ -276,14 +288,14 @@ function MedicineManagement() {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
-        
+                   
                     // Cập nhật đường dẫn ảnh mới vào dữ liệu thuốc
                     updatedMedicine.HinhAnh = uploadResponse.imageUrl;
                 }
                 
                 // Gửi dữ liệu thuốc đã được cập nhật (sử dụng phương thức PUT nếu cần)
                 const response = await axiosCus.put(`${URLUpdateMedicine}${medicine.MaThuoc}`, updatedMedicine);
-                console.log('Medicine updated successfully', response.status);
+                console.log('Medicine updated successfully', response);
                 toast.success('Cập nhật thành công', {
                     position: "top-right",
                     autoClose: 5000,
@@ -323,14 +335,13 @@ function MedicineManagement() {
                 transition: Bounce,
                 });
         }
-    };
+    };        
     
-    const handleAddMedicine = () => {
+    const handleAddMedicine = async () => {
         // Kiểm tra nếu MaThuoc đã tồn tại trong listMedicine
-        const isDuplicate = listMedicine.some(med => med.MaThuoc === medicine.MaThuoc);
+        const isDuplicate = listMedicine.some(med => med.maThuoc === medicine.MaThuoc);
     
         if (isDuplicate) {
-            // Nếu mã thuốc đã tồn tại, thông báo cho người dùng và dừng thêm mới
             toast.warn('Mã thuốc đã tồn tại, vui lòng nhập mã khác', {
                 position: "top-right",
                 autoClose: 5000,
@@ -361,40 +372,75 @@ function MedicineManagement() {
             return;
         }
     
-        // Tiến hành thêm thuốc mới nếu mã thuốc không tồn tại
-        const fetchData = async () => {
-            try {
-                const res = await axiosCus.post(URLAddMedicine, medicine);
-                console.log('Medicine added successfully:', res.data);
-                toast.success('Thêm thuốc mới thành công', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
+        try {
+            let newMedicine = { ...medicine };
+    
+            // Nếu có ảnh mới, upload ảnh trước
+            if (medicine.newImageFile) {
+                const formData = new FormData();
+                formData.append('file', medicine.newImageFile);
+    
+                const uploadResponse = await axiosCus.post(URLUploadImg, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
                 });
-                setIsUpdate(!isUpdate);
-            } catch (error) {
-                console.error('Lỗi thêm sản phẩm', error);
-                toast.error('Thêm thuốc thất bại', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+    
+                // Lấy đường dẫn ảnh từ phản hồi và cập nhật vào dữ liệu thuốc
+                newMedicine.HinhAnh = uploadResponse.imageUrl
             }
-        };
-        fetchData();
-    };          
+    
+            // Gửi dữ liệu thuốc đã được cập nhật đến server
+            const response = await axiosCus.post(URLAddMedicine, newMedicine);
+            console.log('Medicine added successfully:', response);
+    
+            toast.success('Thêm thuốc mới thành công', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            });
+    
+            // Reset dữ liệu để chuẩn bị cho thao tác thêm mới
+            setMedicine({
+                MaThuoc: '',
+                TenThuoc: '',
+                DMThuoc: '',
+                GiaBan: 0,
+                NgaySanXuat: '',
+                NgayHetHan: '',
+                SoLuongThuocCon: 0,
+                CongDung: '',
+                DVT: '',
+                HinhAnh: '',
+                MaDanhMuc: '',
+                KeDon: '',
+                XuatXu: '',
+                KhuVucLuuTru: '',
+                newImageFile: null, // Reset file ảnh
+            });
+            setIsUpdate(!isUpdate);
+    
+        } catch (error) {
+            console.error('Lỗi thêm sản phẩm', error);
+            toast.error('Thêm thuốc thất bại', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            });
+        }
+    };                      
 
     const handleClearDataMedi = () => {
         setMedicine({
@@ -544,7 +590,11 @@ function MedicineManagement() {
                     <div className="col-4 me-4">
                         <p className="d-flex align-items-center">
                             <label htmlFor="" className="col-3 text-start fw-bold">Mã thuốc</label>
-                            <Input value={medicine.MaThuoc} onChange={e => setMedicine({ ...medicine, MaThuoc: e.target.value })} className="col-9" />                        
+                            <Input 
+                                value={medicine.MaThuoc} 
+                                onChange={handleMaThuocChange}  // Sử dụng hàm xử lý thay đổi
+                                className="col-9" 
+                            />
                         </p>
                         <p className="d-flex align-items-center">
                             <label htmlFor="" className="col-3 text-start fw-bold">Tên thuốc</label>

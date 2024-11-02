@@ -69,13 +69,20 @@ const Dashboard = () => {
           }
         });
 
+        const sortedMonths = Array.from(revenueMonths).sort((a, b) => a - b);
+
+        // Nếu tháng hiện tại không có dữ liệu, chọn tháng đầu tiên có dữ liệu
+        if (!sortedMonths.includes(selectedRevenueMonth) && sortedMonths.length > 0) {
+          setSelectedRevenueMonth(sortedMonths[0]);
+        }
+
         const chartDataByDate = Object.keys(revenueByDate)
           .map(date => ({ name: date, total: revenueByDate[date] }))
           .sort((a, b) => new Date(a.name) - new Date(b.name));
 
         setRevenueDataByDate(chartDataByDate);
         setAvailableRevenueYears(Array.from(revenueYears).sort((a, b) => a - b));
-        setAvailableRevenueMonths(Array.from(revenueMonths).sort((a, b) => a - b));
+        setAvailableRevenueMonths(sortedMonths);
       } catch (error) {
         console.error("Error fetching revenue data:", error.message);
       }
