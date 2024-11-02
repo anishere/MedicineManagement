@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh, URLUpdateMedicine } from "../../URL/url";
+import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh, URLUpdateMedicine, URLListEmployee } from "../../URL/url";
 import { Modal, Button, Table } from "antd";
 import MedicineTable from "../components/tableMediforSell";
 import CustomerTable from "../components/tableCusforSell";
@@ -14,6 +14,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 function SellMedicine() {
     const [listMedicine, setListMedicine] = useState([]);
     const [listCustomer, setListCustomer] = useState([]);
+    const [listNV, setListNV] = useState([])
     const [medicineSelected, setMedicineSelected] = useState({
         id: '', 
         quantity: 0,
@@ -42,6 +43,9 @@ function SellMedicine() {
 
                 const rescus = await axiosCus.get(URLListCustomer);
                 setListCustomer(rescus.listKhachHang);
+
+                const resnv = await axiosCus.get(URLListEmployee);
+                setListNV(resnv.listNhanVien);
 
                 if (idCustomer) {
                     const resCusSelected = await axiosCus.get(`${URLGetCusByID}${idCustomer}`);
@@ -219,8 +223,12 @@ function SellMedicine() {
     const totalAmount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
-
+   
     const generatePDF = (employeeID) => {
+        // Tìm tên nhân viên từ listNV dựa trên employeeID
+        const employee = listNV.find((nv) => nv.maNV === employeeID);
+        const employeeName = employee ? employee.tenNV : 'Không xác định';
+    
         if (!customerSelected || invoiceItems.length === 0) {
             alert('Không có hóa đơn để in.');
             return;
@@ -248,7 +256,7 @@ function SellMedicine() {
                     margin: [0, 0, 0, 10],
                 },
                 {
-                    text: `Nhân viên thực hiện: ${employeeID}`,
+                    text: `Nhân viên thực hiện: ${employeeName}`,  // Sử dụng tên nhân viên thay vì mã
                     margin: [0, 0, 0, 20],
                 },
                 {
@@ -277,7 +285,7 @@ function SellMedicine() {
         };
     
         pdfMake.createPdf(docDefinition).download(`hoa_don_${new Date().getTime()}.pdf`);
-    };     
+    };         
 
     return (
         <div className="wrap-sell">
