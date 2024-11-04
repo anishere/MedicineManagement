@@ -1,11 +1,11 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef, useState } from "react";
-import { Table, Input, Button, Space, Select, Modal, DatePicker, TimePicker, Checkbox } from "antd";
+import { Table, Input, Button, Space, Select, Modal, DatePicker, TimePicker, Checkbox, AutoComplete } from "antd";
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { axiosCus } from "../axios/axios";
-import { URLListAccount, URLUserByID, URLCreateAccount, URLChangePassword, URLDeleteAccount, ChiNhanh, URLUpdateAccount } from "../../URL/url";
+import { URLListAccount, URLUserByID, URLCreateAccount, URLChangePassword, URLDeleteAccount, ChiNhanh, URLUpdateAccount, URLListEmployee } from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 
@@ -17,6 +17,9 @@ function AccountManagement() {
     const [idSelected, setIdSelected] = useState('');
     const [accountData, setAccountData] = useState();
     const [isUpdate, setIsUpdate] = useState(false);
+
+    const [listNhanVien, setListNhanVien] = useState([]); 
+    const [nhanVienMap, setNhanVienMap] = useState({}); 
 
     const weekDays = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
     // Check manv co ton tai ko thi moi dc thay doi hay them vao continue... 
@@ -43,6 +46,15 @@ function AccountManagement() {
             try {
                 const res = await axiosCus.get(URLListAccount);
                 setListAccount(res.user);
+
+                const resEmployee = await axiosCus.get(URLListEmployee); // NEW CODE: Gọi API lấy danh sách nhân viên
+                const nhanVienList = resEmployee.listNhanVien;
+                setListNhanVien(nhanVienList); // NEW CODE: Cập nhật state listNhanVien
+                const map = nhanVienList.reduce((acc, nv) => {
+                    acc[nv.maNV] = nv.tenNV;
+                    return acc;
+                }, {});
+                setNhanVienMap(map);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -115,6 +127,12 @@ function AccountManagement() {
         { title: 'User Name', dataIndex: 'userName', key: 'userName', ...getColumnSearchProps('userName') },
         { title: 'User Type', dataIndex: 'userType', key: 'userType', ...getColumnSearchProps('userType') },
         { title: 'Active Status', dataIndex: 'activeStatus', key: 'activeStatus' },
+        { 
+            title: 'Tên Nhân Viên', 
+            dataIndex: 'maNV', 
+            key: 'maNV',
+            render: (maNV) => nhanVienMap[maNV] || 'N/A', // NEW CODE: Hiển thị tên nhân viên dựa trên maNV từ nhanVienMap
+        }
     ];
 
     const handleUpdateAccount = async () => {
@@ -378,9 +396,23 @@ function AccountManagement() {
                                     </>
                                 )}
         
-                                <p><label className="fw-bold">Mã nhân viên</label>
-                                    <Input value={account.maNV} onChange={e => setAccount({ ...account, maNV: e.target.value })} />
+                            <p><label className="fw-bold">Mã nhân viên</label>
+                                <AutoComplete
+                                    options={listNhanVien.map((nv) => ({ value: nv.maNV }))} // NEW CODE: Gợi ý chỉ hiển thị maNV
+                                    value={account.maNV}
+                                    onChange={(value) => setAccount({ ...account, maNV: value })}
+                                    placeholder="Nhập mã nhân viên"
+                                    style={{ width: '30%' }}
+                                >
+                                    <Input /> {/* Cho phép nhập tự do nhưng có gợi ý maNV */}
+                                </AutoComplete>
+                            </p>
+                            {/* Hiển thị tên nhân viên tương ứng bên dưới nếu maNV hợp lệ */}
+                            {account.maNV && nhanVienMap[account.maNV] && (
+                                <p>
+                                    <label className="fw-bold">Tên nhân viên:</label> {nhanVienMap[account.maNV]}
                                 </p>
+                            )}
                             </>
                         )}
     

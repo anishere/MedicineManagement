@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { axiosCus } from "../axios/axios";
 import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh, URLUpdateMedicine, URLListEmployee } from "../../URL/url";
-import { Modal, Button, Table } from "antd";
+import { Modal, Button, Table, InputNumber } from "antd";
 import MedicineTable from "../components/tableMediforSell";
 import CustomerTable from "../components/tableCusforSell";
 import { Bounce, toast } from "react-toastify";
@@ -14,13 +14,13 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 function SellMedicine() {
     const [listMedicine, setListMedicine] = useState([]);
     const [listCustomer, setListCustomer] = useState([]);
-    const [listNV, setListNV] = useState([])
+    const [listNV, setListNV] = useState([]);
     const [medicineSelected, setMedicineSelected] = useState({
         id: '', 
         quantity: 0,
         name: '',
         price: 0,
-        stock: 0, // Số lượng hiện có từ backend
+        stock: 0,
     });
     const [idCustomer, setIdCustomer] = useState();
     const [customerSelected, setCustomerSelected] = useState({
@@ -32,6 +32,7 @@ function SellMedicine() {
     });
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [discountRate, setDiscountRate] = useState(0); // NEW: Giảm giá cho hóa đơn
 
     const [isUpdate, setIsUpdate] = useState(false);
 
@@ -159,18 +160,24 @@ function SellMedicine() {
 
     const handleInvoiceSave = async (employeeID) => {
         try {
+            const totalBeforeDiscount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+            const discountAmount = (totalBeforeDiscount * discountRate) / 100;
+            const totalAfterDiscount = totalBeforeDiscount - discountAmount;
+
             const invoiceRes = await axiosCus.post(URLCreateInvoice, {
                 maNV: employeeID,
                 maKH: customerSelected.maKH,
                 ngayBan: new Date().toISOString(),
                 maCN: ChiNhanh,
-                tongGia: invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0)
+                tongGia: totalAfterDiscount,
+                giaTruocGiam: totalBeforeDiscount,  // NEW: Tổng giá trước giảm
+                giamGia: discountRate                // NEW: Tỷ lệ giảm giá
             });
     
             const maHD = invoiceRes.maHD;
     
             for (const item of invoiceItems) {
-                const addMedicineRes = await axiosCus.post(URLAddMedicineToInvoice, {
+                await axiosCus.post(URLAddMedicineToInvoice, {
                     MaHD: maHD,
                     MaThuoc: item.id,
                     SoLuongBan: item.quantity,
@@ -184,13 +191,11 @@ function SellMedicine() {
                 }
     
                 const updatedStock = item.stock - item.quantity;
-    
                 const updatedMedicineData = {
                     ...medicineInfo,
                     soLuongThuocCon: updatedStock
                 };
-    
-                const updateStockRes = await axiosCus.put(`${URLUpdateMedicine}${item.id}`, updatedMedicineData);
+                await axiosCus.put(`${URLUpdateMedicine}${item.id}`, updatedMedicineData);
                 setIsUpdate(!isUpdate);
             }
     
@@ -220,12 +225,13 @@ function SellMedicine() {
         },
     ];
 
-    const totalAmount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+    const totalBeforeDiscount = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+    const discountAmount = (totalBeforeDiscount * discountRate) / 100;
+    const totalAfterDiscount = totalBeforeDiscount - discountAmount;
 
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
    
     const generatePDF = (employeeID) => {
-        // Tìm tên nhân viên từ listNV dựa trên employeeID
         const employee = listNV.find((nv) => nv.maNV === employeeID);
         const employeeName = employee ? employee.tenNV : 'Không xác định';
     
@@ -240,8 +246,8 @@ function SellMedicine() {
                     text: 'HÓA ĐƠN BÁN THUỐC',
                     fontSize: 16,
                     bold: true,
-                    alignment: 'center',  // Canh giữa tiêu đề
-                    margin: [0, 0, 0, 20],  // Thêm khoảng cách dưới tiêu đề
+                    alignment: 'center',
+                    margin: [0, 0, 0, 20],
                 },
                 {
                     text: `Khách hàng: ${customerSelected.tenKH}`,
@@ -256,7 +262,7 @@ function SellMedicine() {
                     margin: [0, 0, 0, 10],
                 },
                 {
-                    text: `Nhân viên thực hiện: ${employeeName}`,  // Sử dụng tên nhân viên thay vì mã
+                    text: `Nhân viên thực hiện: ${employeeName}`,
                     margin: [0, 0, 0, 20],
                 },
                 {
@@ -276,10 +282,22 @@ function SellMedicine() {
                     margin: [0, 20, 0, 0],
                 },
                 {
-                    text: `Tổng giá: ${totalAmount.toLocaleString()} VND`,
+                    text: `Giá trước giảm: ${totalBeforeDiscount.toLocaleString()} VND`, // NEW
                     bold: true,
                     alignment: 'right',
-                    margin: [0, 20, 0, 0]
+                    margin: [0, 20, 0, 10]
+                },
+                {
+                    text: `Giảm giá: ${discountRate}% (-${discountAmount.toLocaleString()} VND)`, // NEW
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 10]
+                },
+                {
+                    text: `Tổng giá sau giảm: ${totalAfterDiscount.toLocaleString()} VND`, // NEW
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 10]
                 }
             ],
         };
@@ -300,7 +318,20 @@ function SellMedicine() {
                     <h5>Chi tiết Hóa đơn</h5>
                     <p>Khách hàng: <b>{customerSelected && customerSelected.tenKH}</b></p>
                     <Table dataSource={invoiceItems} columns={columns} rowKey="id" pagination={false} />
-                    <p style={{ marginTop: '10px', fontWeight: 'bold' }}>Tổng giá: {totalAmount.toLocaleString()} VND</p>
+                    <div style={{ marginTop: '10px', fontWeight: 'bold' }}>
+                        <p>Giá trước giảm: {totalBeforeDiscount.toLocaleString()} VND</p>
+                        <p>Giảm giá: 
+                            <InputNumber
+                                min={0}
+                                max={100}
+                                value={discountRate}
+                                onChange={(value) => setDiscountRate(value || 0)}
+                                formatter={(value) => `${value}%`}
+                                style={{ marginLeft: '10px' }}
+                            />
+                        </p>
+                        <p>Tổng giá sau giảm: {totalAfterDiscount.toLocaleString()} VND</p>
+                    </div>
                     <div className="text-end">
                         <Button type="primary" onClick={confirmInvoice} style={{ marginTop: '10px' }}>
                             Xác nhận và in

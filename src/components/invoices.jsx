@@ -35,12 +35,11 @@ function invoices() {
                     axiosCus.get(URLListEmployee)
                 ]);
     
-                // Tạo từ điển để tìm tên và sdt khách hàng nhanh chóng
                 const customerDict = {};
                 resCustomers.listKhachHang.forEach(customer => {
                     customerDict[customer.maKH] = {
                         tenKH: customer.tenKH,
-                        sdt: customer.sdt // Thêm sdt vào từ điển
+                        sdt: customer.sdt
                     };
                 });
     
@@ -49,11 +48,10 @@ function invoices() {
                     employeeDict[employee.maNV] = employee.tenNV;
                 });
     
-                // Map lại danh sách hóa đơn với tên, sdt khách hàng và tên nhân viên
                 const updatedInvoices = resInvoices.listHoaDon.map(invoice => ({
                     ...invoice,
                     tenKH: customerDict[invoice.maKH]?.tenKH || 'Không rõ',
-                    sdtKH: customerDict[invoice.maKH]?.sdt || 'Không rõ', // Thêm sdt khách hàng
+                    sdtKH: customerDict[invoice.maKH]?.sdt || 'Không rõ',
                     tenNV: employeeDict[invoice.maNV] || 'Không rõ',
                 }));
     
@@ -68,7 +66,6 @@ function invoices() {
     const getIDInvoice = (invoiceID) => {
         setIdSelected(invoiceID);
 
-        // Lưu thông tin khách hàng tương ứng với mã hóa đơn
         const selectedInvoice = listInvoices.find(invoice => invoice.maHD === invoiceID);
         if (selectedInvoice) {
             setCustomerInfo({
@@ -85,10 +82,9 @@ function invoices() {
                 const selectedInvoice = res.listHoaDon[0];
                 setInvoiceData(selectedInvoice);
     
-                // Tìm tên nhân viên từ listInvoices
                 const selectedInvoiceFromList = listInvoices.find(invoice => invoice.maHD === selectedInvoice.maHD);
                 const employeeName = selectedInvoiceFromList ? selectedInvoiceFromList.tenNV : 'Không rõ';
-                selectedInvoice.tenNV = employeeName;  // Gắn tên nhân viên vào invoiceData
+                selectedInvoice.tenNV = employeeName;
     
                 const resDetailsInvoice = await axiosCus.get(`${URLDetailsInvoice}${idSelected}`);
                 const invoiceDetails = resDetailsInvoice.listThuocTrongHD.map(detail => {
@@ -179,13 +175,13 @@ function invoices() {
         },
         {
             title: 'Tên khách hàng',
-            dataIndex: 'tenKH', // Thêm tên khách hàng
+            dataIndex: 'tenKH',
             key: 'tenKH',
             ...getColumnSearchProps('tenKH'),
         },
         {
             title: 'Số điện thoại',
-            dataIndex: 'sdtKH', // Thêm sdt khách hàng
+            dataIndex: 'sdtKH',
             key: 'sdtKH',
             ...getColumnSearchProps('sdtKH'),
         },
@@ -223,15 +219,15 @@ function invoices() {
                     text: 'HÓA ĐƠN BÁN THUỐC',
                     fontSize: 16,
                     bold: true,
-                    alignment: 'center',  // Canh giữa tiêu đề
-                    margin: [0, 0, 0, 20],  // Thêm margin phía dưới tiêu đề
+                    alignment: 'center',
+                    margin: [0, 0, 0, 20],
                 },
                 {
-                    text: `Khách hàng: ${customerInfo.tenKH}`,  // Sử dụng thông tin khách hàng đã lưu
+                    text: `Khách hàng: ${customerInfo.tenKH}`,
                     margin: [0, 0, 0, 10],
                 },
                 {
-                    text: `Số điện thoại: ${customerInfo.sdtKH}`,  // Sử dụng số điện thoại đã lưu
+                    text: `Số điện thoại: ${customerInfo.sdtKH}`,
                     margin: [0, 0, 0, 10],
                 },
                 {
@@ -259,10 +255,22 @@ function invoices() {
                     margin: [0, 20, 0, 0],
                 },
                 {
-                    text: `Tổng giá: ${invoiceData.tongGia.toLocaleString()} VND`,
+                    text: `Giá trước giảm: ${invoiceData.giaTruocGiam.toLocaleString()} VND`, // NEW
                     bold: true,
                     alignment: 'right',
-                    margin: [0, 20, 0, 0]
+                    margin: [0, 20, 0, 10]
+                },
+                {
+                    text: `Giảm giá: ${invoiceData.giamGia}% (-${((invoiceData.giaTruocGiam * invoiceData.giamGia) / 100).toLocaleString()} VND)`, // NEW
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 10]
+                },
+                {
+                    text: `Tổng giá sau giảm: ${invoiceData.tongGia.toLocaleString()} VND`, // NEW
+                    bold: true,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 10]
                 }
             ],
         };
@@ -271,22 +279,16 @@ function invoices() {
     };
 
     const handleDeleteInvoice = () => {
-        // Hiển thị hộp thoại xác nhận trước khi xóa
         Modal.confirm({
             title: 'Xác nhận xóa',
             content: 'Bạn có chắc chắn muốn xóa tất cả các thuốc trong hóa đơn này?',
             okText: 'Xác nhận',
             cancelText: 'Hủy bỏ',
             onOk: () => {
-                // Nếu người dùng nhấn OK, thực hiện xóa
                 const fetchData = async () => {
                     try {
-                        // Xóa chi tiết hóa đơn (thuốc trong hóa đơn)
-                        const res = await axiosCus.delete(`${URLDeleDetailByIDInvoice}${idSelected}`);
-                        // Xóa hóa đơn
-                        const res2 = await axiosCus.delete(`${URLDeleteInvoice}${idSelected}`);
-                        console.log(res);
-                        console.log(res2);
+                        await axiosCus.delete(`${URLDeleDetailByIDInvoice}${idSelected}`);
+                        await axiosCus.delete(`${URLDeleteInvoice}${idSelected}`);
                         setIsUpdate(!isUpdate);
                         setInvoiceData(null);
                         setInvoiceDetails(null);
@@ -313,7 +315,7 @@ function invoices() {
                 pagination={{ pageSize: 10 }} 
                 onRow={(record) => ({
                     onClick: () => {
-                        getIDInvoice(record.maHD); // Lấy ID hóa đơn khi nhấn vào dòng
+                        getIDInvoice(record.maHD);
                     },
                     onMouseEnter: (e) => {
                         e.currentTarget.style.cursor = 'pointer'; 
@@ -350,18 +352,20 @@ function invoices() {
                                         ))}
                                     </tbody>
                                 </table>
-                                <h5>Tổng tiền: {invoiceData.tongGia.toLocaleString()} VND</h5>
+                                <h5>Giá trước giảm: {invoiceData.giaTruocGiam.toLocaleString()} VND</h5>
+                                <h5>Giảm giá: {invoiceData.giamGia}% (-{((invoiceData.giaTruocGiam * invoiceData.giamGia) / 100).toLocaleString()} VND)</h5>
+                                <h5 className="text-primary">Tổng giá sau giảm: {invoiceData.tongGia.toLocaleString()} VND</h5>
                             </>
                         ) : (
                             <p className="text-center">Chọn 1 hóa đơn để xem thông tin chi tiết.</p>
                         )}
                         <div className="text-end">
-                        <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
-                            In <PrinterOutlined />
-                        </Button>
-                        <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
-                            Xóa <DeleteOutlined />
-                        </Button>
+                            <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
+                                In <PrinterOutlined />
+                            </Button>
+                            <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
+                                Xóa <DeleteOutlined />
+                            </Button>
                         </div>
                     </>
                 )}
