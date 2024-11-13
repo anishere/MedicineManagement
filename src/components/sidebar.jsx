@@ -40,7 +40,7 @@ function Sidebar() {
                 {/* Tạo Menu con cho Quản lý thuốc */}
                 <SubMenu key='sub2' icon={<UserSwitchOutlined />} title="Quản lý nhân sự">
                     <Menu.Item key='4-1' >
-                        <Link to='/accountManagement'>Quản lý nhân viên</Link> {/* Điều hướng đến "/accounts" */}
+                        <Link to='/employeeManagement'>Quản lý nhân viên</Link> {/* Điều hướng đến "/accounts" */}
                     </Menu.Item>
                     <Menu.Item key='4-2'>
                         <Link to='/accountManagement'>Quản lý tài khoản</Link> {/* Điều hướng đến trang Bán thuốc */}

@@ -18,11 +18,15 @@ export const URLUpdateAccount = 'Account/UpdateAccount?userID='
 export const URLCreateAccount = 'Account/CreateAccount'
 export const URLChangePassword = 'Account/ChangePassword'
 export const URLDeleteAccount = 'Account/DeleteUser?userID='
+export const URLUploadAvatar = 'Account/UploadImage'
 
 
-//Employe
+//Employee
 export const URLListEmployee = 'NhanVien/ListNhanVien'
 export const URLEmployeID = 'NhanVien/GetNhanVien/'
+export const URLDeleteEmployee = 'NhanVien/DeleteNhanVien/'
+export const URLAddEmployee = 'NhanVien/AddNhanVien'
+export const URLUpdate = 'NhanVien/UpdateNhanVien/'
 
 //Customer
 export const URLListCustomer = 'KhachHang/ListKhachHang'

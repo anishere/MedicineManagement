@@ -153,6 +153,13 @@
 
 /* Invoices end */
 
+/* manager account */
+
+.img-account {
+  width: 40%;
+  border-radius: 10px;
+}
+
 /* Btn, and color */
 
 .ant-btn:hover {

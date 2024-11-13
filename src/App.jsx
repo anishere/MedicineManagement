@@ -10,6 +10,7 @@ import Dashboard from './components/dashboard';  // Component cho route Dashboar
 import MedicineManagement from './components/medicineManagement';  // Component cho route Medicine
 import AccountManagement from './components/accountManagement';
 import CustomerManagement from './components/customerManagement';  // Component cho route Accounts
+import EmployeeManagement from './components/employeeManagement';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import SellMedicine from './components/sellMedicine';
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/sellMedicine" element={<SellMedicine />} />
                 <Route path="/customerManagement" element={<CustomerManagement />} />
                 <Route path="/accountManagement" element={<AccountManagement />} />
+                <Route path="/employeeManagement" element={<EmployeeManagement />} />
                 <Route path="/invoices" element={<Invoices />} />
               </Routes>
             </Flex>

@@ -2,10 +2,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef, useState } from "react";
 import { Table, Input, Button, Space, Select, Modal, DatePicker, TimePicker, Checkbox, AutoComplete } from "antd";
-import { SearchOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { axiosCus } from "../axios/axios";
-import { URLListAccount, URLUserByID, URLCreateAccount, URLChangePassword, URLDeleteAccount, ChiNhanh, URLUpdateAccount, URLListEmployee } from "../../URL/url";
+import { URLListAccount, URLUserByID, URLCreateAccount, URLChangePassword, URLDeleteAccount, ChiNhanh, URLUpdateAccount, URLListEmployee, URLUploadAvatar } from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 
@@ -123,40 +123,66 @@ function AccountManagement() {
     });
 
     const columns = [
-        { title: 'User ID', dataIndex: 'userID', key: 'userID', ...getColumnSearchProps('userID') },
-        { title: 'User Name', dataIndex: 'userName', key: 'userName', ...getColumnSearchProps('userName') },
-        { title: 'User Type', dataIndex: 'userType', key: 'userType', ...getColumnSearchProps('userType') },
-        { title: 'Active Status', dataIndex: 'activeStatus', key: 'activeStatus' },
+        { title: 'ID', dataIndex: 'userID', key: 'userID', ...getColumnSearchProps('userID') },
+        { title: 'Tên tài khoản', dataIndex: 'userName', key: 'userName', ...getColumnSearchProps('userName') },
+        { title: 'Loại tài khoản', dataIndex: 'userType', key: 'userType', ...getColumnSearchProps('userType') },
+        { title: 'Trạng thái', dataIndex: 'activeStatus', key: 'activeStatus' },
         { 
-            title: 'Tên Nhân Viên', 
+            title: 'Thuộc nhân viên', 
             dataIndex: 'maNV', 
             key: 'maNV',
-            render: (maNV) => nhanVienMap[maNV] || 'N/A', // NEW CODE: Hiển thị tên nhân viên dựa trên maNV từ nhanVienMap
+            ...getColumnSearchProps('maNV') ,
+            //render: (maNV) => nhanVienMap[maNV] || 'N/A', // NEW CODE: Hiển thị tên nhân viên dựa trên maNV từ nhanVienMap
         }
     ];
 
     const handleUpdateAccount = async () => {
-        if (idSelected !== '') {
+        // Kiểm tra nếu `userName` đã tồn tại
+        const existingAccount = listAccount.find((acc) => acc.userName === account.userName);
+        if (idSelected !== '' && existingAccount) {
             try {
-                await axiosCus.put(`${URLUpdateAccount}${idSelected}`, account);
+                let updatedAccount = { ...account };
+    
+                // Nếu có ảnh mới, upload ảnh lên server trước
+                if (account.newImageFile) {
+                    const formData = new FormData();
+                    formData.append('file', account.newImageFile);
+    
+                    // Upload ảnh và lấy URL từ server
+                    const uploadResponse = await axiosCus.post(URLUploadAvatar, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+    
+                    // Cập nhật URL ảnh thực từ server nếu upload thành công
+                    if (uploadResponse&& uploadResponse.imageUrl) {
+                        updatedAccount.avatar = uploadResponse.imageUrl;
+                    } else {
+                        toast.error("Failed to get image URL from server.");
+                        return;
+                    }
+                }
+    
+                // Gửi yêu cầu cập nhật tài khoản với URL ảnh thực từ server
+                await axiosCus.put(`${URLUpdateAccount}${idSelected}`, updatedAccount);
                 toast.success('Updated account successfully');
                 setIsUpdate(!isUpdate);
+    
             } catch (error) {
-                console.error('Error updating account:', error);
+                console.error('Error updating account:', error.response || error.message);
                 toast.error('Update failed');
             }
         } else {
             toast.warn('No account selected for update');
         }
-    };
-
+    };           
+    
     const handleAddAccount = async () => {
         if (account.userName === '' || account.password === '') {
             toast.warn('Please fill in all required information');
             return;
         }
     
-        // Kiểm tra nếu `userName` đã tồn tại trong `listAccount`
+        // Kiểm tra nếu `userName` đã tồn tại
         const existingAccount = listAccount.find((acc) => acc.userName === account.userName);
         if (existingAccount) {
             toast.warn('UserName already exists. Please choose a unique UserName.');
@@ -164,18 +190,28 @@ function AccountManagement() {
         }
     
         try {
-            // Reset `UserID` để SQL tự động tạo ID mới
-            const newAccount = { ...account, userID: 0 };
+            let newAccount = { ...account };
+            
+            // Kiểm tra nếu có ảnh mới
+            if (account.newImageFile) {
+                const formData = new FormData();
+                formData.append('file', account.newImageFile);
     
-            // Gọi API và kiểm tra phản hồi
+                // Upload ảnh lên server
+                const uploadResponse = await axiosCus.post(URLUploadAvatar, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+    
+                // Cập nhật URL ảnh mới vào account
+                newAccount.avatar = uploadResponse.imageUrl;
+            }
+    
             const response = await axiosCus.post(URLCreateAccount, newAccount);
     
-            // Kiểm tra nếu phản hồi thành công
             if (response.statusCode === 200) {
                 toast.success('Added new account successfully');
                 setIsUpdate(!isUpdate);
-                // Clear form sau khi thêm thành công
-                handleClearDataAccount();
+                handleClearDataAccount(); // Reset form sau khi thêm thành công
             } else {
                 toast.error('Add account failed');
             }
@@ -183,7 +219,7 @@ function AccountManagement() {
             console.error('Error adding account:', error);
             toast.error('Add account failed');
         }
-    };              
+    };             
 
     const handleDeleteAccount = () => {
         if (idSelected === '') {
@@ -199,6 +235,7 @@ function AccountManagement() {
             onOk: async () => {
                 try {
                     await axiosCus.delete(`${URLDeleteAccount}${idSelected}`);
+                    handleClearDataAccount();
                     toast.success('Deleted account successfully');
                     setIsUpdate(!isUpdate);
                 } catch (error) {
@@ -230,6 +267,7 @@ function AccountManagement() {
             maNV: '',
             maCN: ChiNhanh,
         });
+        setIdSelected('')
     };
 
     const handleWeekDayChange = (checkedValues) => {
@@ -276,6 +314,31 @@ function AccountManagement() {
         }
     }, [accountData]);
 
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+    
+        // Tạo URL tạm thời để hiển thị ảnh
+        const imageUrlPreview = URL.createObjectURL(file);
+        
+        setAccount((prev) => ({
+            ...prev,
+            avatar: imageUrlPreview, // Hiển thị preview
+            newImageFile: file,      // Lưu file để upload
+        }));
+    };        
+
+    const handleUserNameChange = (e) => {
+        const newUserName = e.target.value;
+    
+        setAccount((prev) => ({
+            ...prev,
+            userName: newUserName,
+            avatar: newUserName !== prev.userName ? '' : prev.avatar, // Xóa ảnh nếu mã thuốc thay đổi
+            newImageFile: newUserName !== prev.userName ? null : prev.newImageFile // Xóa file ảnh nếu mã thuốc thay đổi
+        }));
+    }; 
+
     return (
         <div className="container">
             <div className="row">
@@ -302,14 +365,14 @@ function AccountManagement() {
                     <h3 className="mb-3">Chi tiết tài khoản</h3>
                     <div className="infoAccount-detail">
                         <p><label className="fw-bold">Tên tài khoản</label>
-                            <Input value={account.userName} onChange={e => setAccount({ ...account, userName: e.target.value })} />
+                            <Input onch value={account.userName} onChange={handleUserNameChange} />
                         </p>
                         <p><label className="fw-bold">Mật khẩu</label>
                             <Input.Password value={account.password} onChange={e => setAccount({ ...account, password: e.target.value })} />
                         </p>
                         
                         {/* Trạng thái hoạt động */}
-                        <p><label className="fw-bold">Trạng thái hoạt động</label>
+                        <p><label className="fw-bold me-2">Trạng thái hoạt động</label>
                             <Select
                                 value={account.activeStatus}
                                 onChange={(value) => setAccount({ ...account, activeStatus: value })}
@@ -322,10 +385,23 @@ function AccountManagement() {
                         {/* Chỉ hiển thị các trường khác khi activeStatus là 1 */}
                         {account.activeStatus === 1 && (
                             <>
-                                <p><label className="fw-bold">Ảnh đại diện</label>
-                                    <Input value={account.avatar} onChange={e => setAccount({ ...account, avatar: e.target.value })} />
+                                <p>
+                                    <p><label className="fw-bold">Ảnh đại diện</label></p>
+                                    <img src={account.avatar ? account.avatar : '/avatarStore/default.jpg'} className="img-account" alt="Medicine Image" />
+
+                                    {/* Label để trigger file input */}
+                                    <p><label htmlFor="file-input" className="mt-2 styled-label">Chọn ảnh <FolderOpenOutlined /></label></p>
+
+                                    {/* Input để chọn file hình ảnh */}
+                                    <input
+                                        id="file-input"
+                                        type="file"
+                                        accept="image/*" // Chỉ cho phép file hình ảnh
+                                        onChange={handleImageUpload}
+                                        className="file-input"
+                                    />
                                 </p>
-                                <p><label className="fw-bold">Loại tài khoản</label>
+                                <p><label className="fw-bold me-2">Loại tài khoản</label>
                                     <Select value={account.userType} onChange={(value) => setAccount({ ...account, userType: value })}>
                                         <Select.Option value="Admin">Admin</Select.Option>
                                         <Select.Option value="User">Dược sĩ</Select.Option>
@@ -336,7 +412,7 @@ function AccountManagement() {
                                 </p>
         
                                 {/* Work Schedule */}
-                                <p><label className="fw-bold">Lịch làm việc</label>
+                                <p><label className="fw-bold me-2">Lịch làm việc</label>
                                     <Select 
                                         value={account.workShedule} 
                                         onChange={(value) => setAccount({ ...account, workShedule: value })}
@@ -349,14 +425,14 @@ function AccountManagement() {
                                 {/* Chỉ hiển thị khi WorkShedule là 1 */}
                                 {account.workShedule === 1 && (
                                     <>
-                                        <p><label className="fw-bold">Thời gian bắt đầu</label>
+                                        <p><label className="fw-bold me-2">Thời gian bắt đầu</label>
                                             <TimePicker 
                                                 value={account.startTime ? dayjs(account.startTime, 'HH:mm:ss') : null} 
                                                 onChange={(time) => setAccount({ ...account, startTime: time ? time.format('HH:mm:ss') : '' })} 
                                                 format="HH:mm:ss" 
                                             />
                                         </p>
-                                        <p><label className="fw-bold">Thời gian kết thúc</label>
+                                        <p><label className="fw-bold me-2">Thời gian kết thúc</label>
                                             <TimePicker 
                                                 value={account.endTime ? dayjs(account.endTime, 'HH:mm:ss') : null} 
                                                 onChange={(time) => setAccount({ ...account, endTime: time ? time.format('HH:mm:ss') : '' })} 
@@ -374,7 +450,7 @@ function AccountManagement() {
                                 )}
         
                                 {/* Active Schedule */}
-                                <p><label className="fw-bold">Kích hoạt lịch</label>
+                                <p><label className="fw-bold me-2">Kích hoạt lịch</label>
                                     <Select 
                                         value={account.activeShedule} 
                                         onChange={(value) => setAccount({ ...account, activeShedule: value })}
@@ -387,16 +463,16 @@ function AccountManagement() {
                                 {/* Chỉ hiển thị khi ActiveShedule là 1 */}
                                 {account.activeShedule === 1 && (
                                     <>
-                                        <p><label className="fw-bold">Ngày kích hoạt tài khoản</label>
+                                        <p><label className="fw-bold me-2">Ngày kích hoạt tài khoản</label>
                                             <DatePicker value={account.activationDate} onChange={(date) => setAccount({ ...account, activationDate: date })} />
                                         </p>
-                                        <p><label className="fw-bold">Ngày hết hạn tài khoản</label>
+                                        <p><label className="fw-bold me-2">Ngày hết hạn tài khoản</label>
                                             <DatePicker value={account.deactivationDate} onChange={(date) => setAccount({ ...account, deactivationDate: date })} />
                                         </p>
                                     </>
                                 )}
         
-                            <p><label className="fw-bold">Mã nhân viên</label>
+                            <p><label className="fw-bold me-2">Mã nhân viên</label>
                                 <AutoComplete
                                     options={listNhanVien.map((nv) => ({ value: nv.maNV }))} // NEW CODE: Gợi ý chỉ hiển thị maNV
                                     value={account.maNV}
@@ -410,17 +486,17 @@ function AccountManagement() {
                             {/* Hiển thị tên nhân viên tương ứng bên dưới nếu maNV hợp lệ */}
                             {account.maNV && nhanVienMap[account.maNV] && (
                                 <p>
-                                    <label className="fw-bold">Tên nhân viên:</label> {nhanVienMap[account.maNV]}
+                                    <label className="fw-bold me-2">Tên nhân viên:</label> {nhanVienMap[account.maNV]}
                                 </p>
                             )}
                             </>
                         )}
     
                         <div className="button-group mt-3">
-                            <Button onClick={handleAddAccount} type="primary">Add</Button>
-                            <Button onClick={handleUpdateAccount} style={{ backgroundColor: 'gold', color: 'black' }}>Update</Button>
-                            <Button onClick={handleDeleteAccount} danger>Delete</Button>
-                            <Button onClick={handleClearDataAccount} style={{ backgroundColor: 'gray', color: 'white' }}>Clear</Button>
+                            <Button className="me-2" onClick={handleAddAccount} type="primary">Tạo</Button>
+                            <Button className="me-2" onClick={handleUpdateAccount} style={{ backgroundColor: 'gold', color: 'black' }}>Cập nhật</Button>
+                            <Button className="me-2" onClick={handleDeleteAccount} danger>Xóa</Button>
+                            <Button onClick={handleClearDataAccount} style={{ backgroundColor: 'gray', color: 'white' }}>Xóa thông tin</Button>
                         </div>
                     </div>
                 </div>
