@@ -20,46 +20,49 @@ function invoices() {
     const [invoiceDetails, setInvoiceDetails] = useState();
     const [listMedicine, setListMedicine] = useState();
 
+    const [filterDate, setFilterDate] = useState({ day: "", month: "", year: "" });
+
     // State lưu thông tin khách hàng
     const [customerInfo, setCustomerInfo] = useState({ tenKH: '', sdtKH: '' });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await axiosCus.get(URLListMedicine);
-                setListMedicine(res.listMedicine);
+    const fetchData = async () => {
+        try {
+            const res = await axiosCus.get(URLListMedicine);
+            setListMedicine(res.listMedicine);
 
-                const [resInvoices, resCustomers, resEmployees] = await Promise.all([
-                    axiosCus.get(URLListInvouces),
-                    axiosCus.get(URLListCustomer),
-                    axiosCus.get(URLListEmployee)
-                ]);
-    
-                const customerDict = {};
-                resCustomers.listKhachHang.forEach(customer => {
-                    customerDict[customer.maKH] = {
-                        tenKH: customer.tenKH,
-                        sdt: customer.sdt
-                    };
-                });
-    
-                const employeeDict = {};
-                resEmployees.listNhanVien.forEach(employee => {
-                    employeeDict[employee.maNV] = employee.tenNV;
-                });
-    
-                const updatedInvoices = resInvoices.listHoaDon.map(invoice => ({
-                    ...invoice,
-                    tenKH: customerDict[invoice.maKH]?.tenKH || 'Không rõ',
-                    sdtKH: customerDict[invoice.maKH]?.sdt || 'Không rõ',
-                    tenNV: employeeDict[invoice.maNV] || 'Không rõ',
-                }));
-    
-                setListInvoices(updatedInvoices);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
+            const [resInvoices, resCustomers, resEmployees] = await Promise.all([
+                axiosCus.get(URLListInvouces),
+                axiosCus.get(URLListCustomer),
+                axiosCus.get(URLListEmployee)
+            ]);
+
+            const customerDict = {};
+            resCustomers.listKhachHang.forEach(customer => {
+                customerDict[customer.maKH] = {
+                    tenKH: customer.tenKH,
+                    sdt: customer.sdt
+                };
+            });
+
+            const employeeDict = {};
+            resEmployees.listNhanVien.forEach(employee => {
+                employeeDict[employee.maNV] = employee.tenNV;
+            });
+
+            const updatedInvoices = resInvoices.listHoaDon.map(invoice => ({
+                ...invoice,
+                tenKH: customerDict[invoice.maKH]?.tenKH || 'Không rõ',
+                sdtKH: customerDict[invoice.maKH]?.sdt || 'Không rõ',
+                tenNV: employeeDict[invoice.maNV] || 'Không rõ',
+            }));
+
+            setListInvoices(updatedInvoices);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, [isUpdate]);      
     
@@ -196,6 +199,11 @@ function invoices() {
             dataIndex: 'ngayBan',
             key: 'ngayBan',
             ...getColumnSearchProps('ngayBan'),
+            render: (text) => {
+                // Chuyển đổi thành đối tượng Date và định dạng theo kiểu 'dd/mm/yyyy'
+                const date = new Date(text);
+                return date.toLocaleDateString('vi-VN');  // "vi-VN" để hiển thị ngày theo định dạng Việt Nam
+            }
         },
         {
             title: 'Tổng giá',
@@ -303,72 +311,131 @@ function invoices() {
             }
         });
     };
+
+    //filter
+    const handleFilter = () => {
+        const { day, month, year } = filterDate;
+        const filteredInvoices = listInvoices.filter(invoice => {
+            const invoiceDate = new Date(invoice.ngayBan);
+            const isMatchDay = day ? invoiceDate.getDate() === day : true;
+            const isMatchMonth = month ? invoiceDate.getMonth() + 1 === month : true;
+            const isMatchYear = year ? invoiceDate.getFullYear() === year : true;
+    
+            return isMatchDay && isMatchMonth && isMatchYear;
+        });
+        setListInvoices(filteredInvoices);
+    };
+    
+    const handleResetFilter = () => {
+        setFilterDate({ day: "", month: "", year: "" });
+        // Reset lại dữ liệu ban đầu, ví dụ như gọi lại API để lấy lại tất cả các hóa đơn
+        fetchData();
+    };
+    
     
     return (
-        <>
-        <div className="wrap-invoices d-flex">
-            <Table
-                className="table-medicine table-invoices"
-                columns={columns}
-                dataSource={listInvoices}
-                rowKey="maHD"
-                pagination={{ pageSize: 10 }} 
-                onRow={(record) => ({
-                    onClick: () => {
-                        getIDInvoice(record.maHD);
-                    },
-                    onMouseEnter: (e) => {
-                        e.currentTarget.style.cursor = 'pointer'; 
-                    },
-                })}
-            />
+    <>
+        <div className="w-100">
+            <div className="wrap-invoices d-flex">
+                <Table
+                    className="table-medicine table-invoices"
+                    columns={columns}
+                    dataSource={listInvoices}
+                    rowKey="maHD"
+                    pagination={{ pageSize: 10 }} 
+                    onRow={(record) => ({
+                        onClick: () => {
+                            getIDInvoice(record.maHD);
+                        },
+                        onMouseEnter: (e) => {
+                            e.currentTarget.style.cursor = 'pointer'; 
+                        },
+                    })}
+                />
 
-            <div className="sec-infoMedicine sec-invoices p-1">
-                <h3 className="mb-3">THÔNG TIN HÓA ĐƠN</h3>
-                {invoiceData && (
-                    <>
-                        <p><strong>Khách hàng:</strong> {customerInfo.tenKH}</p>
-                        <p><strong>Số điện thoại:</strong> {customerInfo.sdtKH}</p>
-                        <p><strong>Nhân viên thực hiện:</strong> {invoiceData.tenNV}</p>
-                        {invoiceDetails && invoiceDetails.length > 0 ? (
-                            <>
-                                <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tên thuốc</th>
-                                            <th>Số lượng</th>
-                                            <th>Đơn giá</th>
-                                            <th>Thành tiền</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {invoiceDetails.map((detail, index) => (
-                                            <tr key={index}>
-                                                <td>{detail.tenThuoc}</td>
-                                                <td>{detail.soLuongBan}</td>
-                                                <td>{detail.giaBan.toLocaleString()} VND</td>
-                                                <td>{detail.thanhTien.toLocaleString()} VND</td>
+                <div className="sec-infoMedicine sec-invoices p-1">
+                    <h3 className="mb-3">THÔNG TIN HÓA ĐƠN</h3>
+                    {invoiceData && (
+                        <>
+                            <p><strong>Khách hàng:</strong> {customerInfo.tenKH}</p>
+                            <p><strong>Số điện thoại:</strong> {customerInfo.sdtKH}</p>
+                            <p><strong>Nhân viên thực hiện:</strong> {invoiceData.tenNV}</p>
+                            {invoiceDetails && invoiceDetails.length > 0 ? (
+                                <>
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Tên thuốc</th>
+                                                <th>Số lượng</th>
+                                                <th>Đơn giá</th>
+                                                <th>Thành tiền</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                <h5>Giá trước giảm: {invoiceData.giaTruocGiam.toLocaleString()} VND</h5>
-                                <h5>Giảm giá: {invoiceData.giamGia}% (-{((invoiceData.giaTruocGiam * invoiceData.giamGia) / 100).toLocaleString()} VND)</h5>
-                                <h5 className="text-primary">Tổng giá sau giảm: {invoiceData.tongGia.toLocaleString()} VND</h5>
-                            </>
-                        ) : (
-                            <p className="text-center">Chọn 1 hóa đơn để xem thông tin chi tiết.</p>
-                        )}
-                        <div className="text-end">
-                            <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
-                                In <PrinterOutlined />
-                            </Button>
-                            <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
-                                Xóa <DeleteOutlined />
-                            </Button>
-                        </div>
-                    </>
-                )}
+                                        </thead>
+                                        <tbody>
+                                            {invoiceDetails.map((detail, index) => (
+                                                <tr key={index}>
+                                                    <td>{detail.tenThuoc}</td>
+                                                    <td>{detail.soLuongBan}</td>
+                                                    <td>{detail.giaBan.toLocaleString()} VND</td>
+                                                    <td>{detail.thanhTien.toLocaleString()} VND</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <h5>Giá trước giảm: {invoiceData.giaTruocGiam.toLocaleString()} VND</h5>
+                                    <h5>Giảm giá: {invoiceData.giamGia}% (-{((invoiceData.giaTruocGiam * invoiceData.giamGia) / 100).toLocaleString()} VND)</h5>
+                                    <h5 className="text-primary">Tổng giá sau giảm: {invoiceData.tongGia.toLocaleString()} VND</h5>
+                                </>
+                            ) : (
+                                <p className="text-center">Chọn 1 hóa đơn để xem thông tin chi tiết.</p>
+                            )}
+                            <div className="text-end">
+                                <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
+                                    In <PrinterOutlined />
+                                </Button>
+                                <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
+                                    Xóa <DeleteOutlined />
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+            <div className="filter-section">
+                <h5>Lọc hóa đơn</h5>
+                <div className="row">
+                    <div className="col-md-4">
+                        <label>Ngày</label>
+                        <Input
+                            type="number"
+                            value={filterDate.day || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, day: parseInt(e.target.value) })}
+                            placeholder="Ngày"
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Tháng</label>
+                        <Input
+                            type="number"
+                            value={filterDate.month || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, month: parseInt(e.target.value) })}
+                            placeholder="Tháng"
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Năm</label>
+                        <Input
+                            type="number"
+                            value={filterDate.year || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, year: parseInt(e.target.value) })}
+                            placeholder="Năm"
+                        />
+                    </div>
+                </div>
+                <div className="mt-3">
+                    <Button onClick={handleFilter} type="primary">Áp Dụng Lọc</Button>
+                    <Button onClick={handleResetFilter} style={{ marginLeft: "10px" }}>Reset Lọc</Button>
+                </div>
             </div>
         </div>
     </>

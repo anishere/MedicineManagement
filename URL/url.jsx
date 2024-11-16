@@ -56,13 +56,10 @@ export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'
 
 // Cung cap
 export const URLListCungCap = 'CungCap/ListCungCap'
-export const URLGetCungCap = (maNV, maNCC, maThuoc) => 
-    `CungCap/GetCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
+export const URLGetCungCap = 'CungCap/GetCungCap?idCungCap='
 export const URLAddCungCap = 'CungCap/AddCungCap';
-export const URLUpdateCungCap = (maNV, maNCC, maThuoc) => 
-    `CungCap/UpdateCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
-export const URLDeleteCungCap = (maNV, maNCC, maThuoc) => 
-    `CungCap/DeleteCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
+export const URLUpdateCungCap = 'CungCap/UpdateCungCap?idCungCap='
+export const URLDeleteCungCap = 'CungCap/DeleteCungCap?idCungCap='
 
 // Nha cung cap
 export const URLGetAllSupplier = 'NhaCungCap/GetAllSuppliers'

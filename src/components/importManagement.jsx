@@ -22,6 +22,7 @@ function ImportManagement() {
     const searchInput = useRef(null);
 
     const [selectedCungCap, setSelectedCungCap] = useState({
+        idCungCap: "",
         maNV: "",
         maNCC: "",
         maThuoc: "",
@@ -33,21 +34,31 @@ function ImportManagement() {
 
     const [isUpdate, setIsUpdate] = useState(false);
 
+    // States for filtering by day, month, and year
+    const [filterDate, setFilterDate] = useState({
+        day: 0, // Default 0 means no filter
+        month: 0, // Default 0 means no filter
+        year: 0, // Default 0 means no filter
+    });
+
+    // Fetch dữ liệu function
+    const fetchData = async () => {
+        try {
+            const res = await axiosCus.get(URLListCungCap);
+            const formattedData = res.listCungCap.map((item) => ({
+                ...item,
+                ngayCungCap: item.ngayCungCap
+                    ? dayjs(item.ngayCungCap, "YYYY-MM-DD")
+                    : null,
+            }));
+            setListCungCap(formattedData || []);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
+
+    // Fetch data when the component is first rendered
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await axiosCus.get(URLListCungCap);
-                const formattedData = res.listCungCap.map((item) => ({
-                    ...item,
-                    ngayCungCap: item.ngayCungCap
-                        ? dayjs(item.ngayCungCap, "YYYY-MM-DD")
-                        : null,
-                }));
-                setListCungCap(formattedData || []);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
         fetchData();
     }, [isUpdate]);
 
@@ -112,6 +123,7 @@ function ImportManagement() {
     });
 
     const columns = [
+        { title: "ID Cung Cấp", dataIndex: "idCungCap", key: "idCungCap" },
         { title: "Mã NV", dataIndex: "maNV", key: "maNV", ...getColumnSearchProps("maNV") },
         { title: "Mã NCC", dataIndex: "maNCC", key: "maNCC", ...getColumnSearchProps("maNCC") },
         { title: "Mã Thuốc", dataIndex: "maThuoc", key: "maThuoc", ...getColumnSearchProps("maThuoc") },
@@ -121,9 +133,8 @@ function ImportManagement() {
             key: "ngayCungCap",
             render: (text) => (text ? dayjs(text).format("DD/MM/YYYY") : ""),
         },
-        { title: "Số Lượng Nhập", dataIndex: "soLuongThuocNhap", key: "soLuongThuocNhap" },
-        { title: "Mã CN", dataIndex: "maCN", key: "maCN" },
-        { title: "Giá Nhập", dataIndex: "giaNhap", key: "giaNhap" },
+        { title: "Số Lượng Nhập", dataIndex: "soLuongThuocNhap", key: "soLuongThuocNhap", ...getColumnSearchProps("soLuongThuocNhap") },
+        { title: "Giá Nhập", dataIndex: "giaNhap", key: "giaNhap", ...getColumnSearchProps("giaNhap") },
     ];
 
     const handleAdd = async () => {
@@ -148,10 +159,7 @@ function ImportManagement() {
                 ...selectedCungCap,
                 ngayCungCap: selectedCungCap.ngayCungCap?.format("YYYY-MM-DD"),
             };
-            await axiosCus.put(
-                URLUpdateCungCap(selectedCungCap.maNV, selectedCungCap.maNCC, selectedCungCap.maThuoc),
-                payload
-            );
+            await axiosCus.put(`${URLUpdateCungCap}${selectedCungCap.idCungCap}`, payload);
             toast.success("Cập nhật thành công!");
             setIsUpdate(!isUpdate);
             handleClear();
@@ -169,9 +177,7 @@ function ImportManagement() {
             cancelText: "Hủy bỏ",
             onOk: async () => {
                 try {
-                    await axiosCus.delete(
-                        URLDeleteCungCap(selectedCungCap.maNV, selectedCungCap.maNCC, selectedCungCap.maThuoc)
-                    );
+                    await axiosCus.delete(`${URLDeleteCungCap}${selectedCungCap.idCungCap}`);
                     toast.success("Xóa thành công!");
                     setIsUpdate(!isUpdate);
                     handleClear();
@@ -185,6 +191,7 @@ function ImportManagement() {
 
     const handleClear = () => {
         setSelectedCungCap({
+            idCungCap: "",
             maNV: "",
             maNCC: "",
             maThuoc: "",
@@ -193,6 +200,29 @@ function ImportManagement() {
             maCN: ChiNhanh,
             giaNhap: "",
         });
+    };
+
+    const handleFilter = () => {
+        let filteredData = listCungCap;
+
+        if (filterDate.day !== 0) {
+            filteredData = filteredData.filter(item => dayjs(item.ngayCungCap).date() === filterDate.day);
+        }
+
+        if (filterDate.month !== 0) {
+            filteredData = filteredData.filter(item => dayjs(item.ngayCungCap).month() + 1 === filterDate.month);
+        }
+
+        if (filterDate.year !== 0) {
+            filteredData = filteredData.filter(item => dayjs(item.ngayCungCap).year() === filterDate.year);
+        }
+
+        setListCungCap(filteredData);
+    };
+
+    const handleResetFilter = () => {
+        setFilterDate({ day: 0, month: 0, year: 0 });
+        fetchData(); // Reset to the original list
     };
 
     return (
@@ -204,92 +234,117 @@ function ImportManagement() {
                         className="table-cungcap"
                         columns={columns}
                         dataSource={listCungCap}
-                        rowKey={(record) => `${record.maNV}-${record.maNCC}-${record.maThuoc}`}
-                        pagination={{ pageSize: 10 }}
-                        onRow={(record) => ({
-                            onClick: () => setSelectedCungCap(record),
-                        })}
+                        rowKey="idCungCap"
                     />
                 </div>
+
                 <div className="col-md-4">
-                    <h4 className="mb-3">Thông tin cung cấp</h4>
-                    <div>
-                        <p>
-                            <label>Mã NV</label>
-                            <Input
-                                value={selectedCungCap.maNV}
-                                onChange={(e) =>
-                                    setSelectedCungCap({ ...selectedCungCap, maNV: e.target.value })
-                                }
-                            />
-                        </p>
-                        <p>
-                            <label>Mã NCC</label>
-                            <Input
-                                value={selectedCungCap.maNCC}
-                                onChange={(e) =>
-                                    setSelectedCungCap({ ...selectedCungCap, maNCC: e.target.value })
-                                }
-                            />
-                        </p>
-                        <p>
-                            <label>Mã Thuốc</label>
-                            <Input
-                                value={selectedCungCap.maThuoc}
-                                onChange={(e) =>
-                                    setSelectedCungCap({ ...selectedCungCap, maThuoc: e.target.value })
-                                }
-                            />
-                        </p>
-                        <p>
-                            <label>Ngày Cung Cấp</label>
-                            <DatePicker
-                                value={selectedCungCap.ngayCungCap}
-                                onChange={(date) =>
-                                    setSelectedCungCap({
-                                        ...selectedCungCap,
-                                        ngayCungCap: date,
-                                    })
-                                }
-                                format="DD/MM/YYYY"
-                            />
-                        </p>
-                        <p>
-                            <label>Số Lượng Nhập</label>
-                            <Input
-                                value={selectedCungCap.soLuongThuocNhap}
-                                onChange={(e) =>
-                                    setSelectedCungCap({
-                                        ...selectedCungCap,
-                                        soLuongThuocNhap: e.target.value,
-                                    })
-                                }
-                            />
-                        </p>
-                        <p>
-                            <label>Giá Nhập</label>
-                            <Input
-                                value={selectedCungCap.giaNhap}
-                                onChange={(e) =>
-                                    setSelectedCungCap({ ...selectedCungCap, giaNhap: e.target.value })
-                                }
-                            />
-                        </p>
-                        <div className="button-group">
-                            <Button className="me-2" onClick={handleAdd} type="primary">
-                                Thêm
-                            </Button>
-                            <Button className="me-2" onClick={handleUpdate} style={{ backgroundColor: "gold" }}>
-                                Cập nhật
-                            </Button>
-                            <Button className="me-2" onClick={handleDelete} danger>
+                    <h4 className="mb-3">Thêm / Cập nhật cung cấp</h4>
+                    <div className="form-group">
+                        <label htmlFor="maNV">Mã NV:</label>
+                        <Input
+                            id="maNV"
+                            value={selectedCungCap.maNV}
+                            onChange={(e) => setSelectedCungCap({ ...selectedCungCap, maNV: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="maNCC">Mã NCC:</label>
+                        <Input
+                            id="maNCC"
+                            value={selectedCungCap.maNCC}
+                            onChange={(e) => setSelectedCungCap({ ...selectedCungCap, maNCC: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="maThuoc">Mã Thuốc:</label>
+                        <Input
+                            id="maThuoc"
+                            value={selectedCungCap.maThuoc}
+                            onChange={(e) => setSelectedCungCap({ ...selectedCungCap, maThuoc: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="ngayCungCap">Ngày Cung Cấp:</label>
+                        <DatePicker
+                            id="ngayCungCap"
+                            value={selectedCungCap.ngayCungCap}
+                            onChange={(date) => setSelectedCungCap({ ...selectedCungCap, ngayCungCap: date })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="soLuongThuocNhap">Số Lượng Nhập:</label>
+                        <Input
+                            id="soLuongThuocNhap"
+                            value={selectedCungCap.soLuongThuocNhap}
+                            onChange={(e) => setSelectedCungCap({ ...selectedCungCap, soLuongThuocNhap: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="giaNhap">Giá Nhập:</label>
+                        <Input
+                            id="giaNhap"
+                            value={selectedCungCap.giaNhap}
+                            onChange={(e) => setSelectedCungCap({ ...selectedCungCap, giaNhap: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <Button type="primary" onClick={isUpdate ? handleUpdate : handleAdd}>
+                            {isUpdate ? "Cập nhật" : "Thêm"}
+                        </Button>
+                        {isUpdate && (
+                            <Button danger onClick={handleDelete} style={{ marginLeft: "10px" }}>
                                 Xóa
                             </Button>
-                            <Button onClick={handleClear} style={{ backgroundColor: "gray" }}>
-                                Xóa thông tin
-                            </Button>
-                        </div>
+                        )}
+                        <Button onClick={handleClear} style={{ marginLeft: "10px" }}>
+                            Hủy
+                        </Button>
                     </div>
+                </div>
+            </div>
+
+            {/* Filter Section */}
+            <div className="filter-section">
+                <h5>Filter</h5>
+                <div className="row">
+                    <div className="col-md-4">
+                        <label>Ngày</label>
+                        <Input
+                            type="number"
+                            value={filterDate.day || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, day: parseInt(e.target.value) })}
+                            placeholder="Day"
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Tháng</label>
+                        <Input
+                            type="number"
+                            value={filterDate.month || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, month: parseInt(e.target.value) })}
+                            placeholder="Month"
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Năm</label>
+                        <Input
+                            type="number"
+                            value={filterDate.year || ""}
+                            onChange={(e) => setFilterDate({ ...filterDate, year: parseInt(e.target.value) })}
+                            placeholder="Year"
+                        />
+                    </div>
+                </div>
+                <div className="mt-3">
+                    <Button onClick={handleFilter} type="primary">Áp Dụng Lọc</Button>
+                    <Button onClick={handleResetFilter} style={{ marginLeft: "10px" }}>Reset Lọc</Button>
                 </div>
             </div>
         </div>
