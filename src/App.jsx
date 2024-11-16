@@ -11,6 +11,9 @@ import MedicineManagement from './components/medicineManagement';  // Component 
 import AccountManagement from './components/accountManagement';
 import CustomerManagement from './components/customerManagement';  // Component cho route Accounts
 import EmployeeManagement from './components/employeeManagement';
+import CategoryManagement from './components/categoryManagement';
+import SupplierManagement from './components/supplierManagement';
+import ImportManagement from './components/importManagement';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import SellMedicine from './components/sellMedicine';
@@ -52,10 +55,13 @@ function App() {
                 <Route path="/" element={<Dashboard />} /> {/* Mặc định là Dashboard */}
                 <Route path="/medicineManagement" element={<MedicineManagement />} />
                 <Route path="/sellMedicine" element={<SellMedicine />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/categoryManagement" element={<CategoryManagement />} />
                 <Route path="/customerManagement" element={<CustomerManagement />} />
                 <Route path="/accountManagement" element={<AccountManagement />} />
                 <Route path="/employeeManagement" element={<EmployeeManagement />} />
-                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/supplierManagement" element={<SupplierManagement />} />
+                <Route path="/importManagement" element={<ImportManagement />} />
               </Routes>
             </Flex>
           </Content>

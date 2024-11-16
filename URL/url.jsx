@@ -8,6 +8,10 @@ export const URLUploadImg = 'Medicine/UploadImage'
 
 //Category
 export const URLCategory = 'DanhMuc/GetAllCategories'
+export const URLGetCateByID = 'DanhMuc/GetCategoryById/'
+export const URLCreateCate = 'DanhMuc/AddCategory'
+export const URLUpdateCate = 'DanhMuc/UpdateCategory'
+export const URLDeleteCate = 'DanhMuc/DeleteCategory/'
 
 //Login 
 export const URLLogin = 'Account/Login'
@@ -47,12 +51,25 @@ export const URLGetInvoiceFromServer = 'HoaDon/RevenueStatistics/'
 //Details Invoice
 export const URLDetailsInvoice = 'ThuocTrongHD/ListThuocTrongHD/'
 export const URLDeleDetailByIDInvoice = 'ThuocTrongHD/DeleteAllThuocTrongHD/'
-
 //Medicine in Invoice
 export const URLAddMedicineToInvoice = 'ThuocTrongHD/AddThuocTrongHD'
 
 // Cung cap
 export const URLListCungCap = 'CungCap/ListCungCap'
+export const URLGetCungCap = (maNV, maNCC, maThuoc) => 
+    `CungCap/GetCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
+export const URLAddCungCap = 'CungCap/AddCungCap';
+export const URLUpdateCungCap = (maNV, maNCC, maThuoc) => 
+    `CungCap/UpdateCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
+export const URLDeleteCungCap = (maNV, maNCC, maThuoc) => 
+    `CungCap/DeleteCungCap?maNV=${maNV}&maNCC=${maNCC}&maThuoc=${maThuoc}`;
+
+// Nha cung cap
+export const URLGetAllSupplier = 'NhaCungCap/GetAllSuppliers'
+export const URLGetSupplierByID = 'NhaCungCap/GetSupplierById/'
+export const URLAddSupplier = 'NhaCungCap/AddSupplier'
+export const URLUpdateSupplier = 'NhaCungCap/UpdateSupplier/'
+export const URLDeleteSupplier = 'NhaCungCap/DeleteSupplier/'
 
 
 
