@@ -7,6 +7,15 @@ import { Link } from "react-router-dom"; // Import Link
 const { SubMenu } = Menu; // Sử dụng SubMenu từ Menu
 
 function Sidebar() {
+
+    const handleLogout = () => {
+        // Xóa toàn bộ local storage
+        localStorage.clear();
+    
+        // Làm mới lại trang
+        window.location.reload();
+    };    
+
     return (
         <>
             <Flex align="center" justify="center">
@@ -72,7 +81,7 @@ function Sidebar() {
                 </Menu.Item>
 
                 <Menu.Item key='9' icon={<LoginOutlined />}>
-                    <Link to='/logout'>Thoát</Link> {/* Điều hướng đến "/logout" */}
+                    <Link onClick={handleLogout} to=''>Thoát</Link> {/* Điều hướng đến "/logout" */}
                 </Menu.Item>
             </Menu>
         </>

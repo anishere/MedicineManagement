@@ -56,7 +56,13 @@ function invoices() {
                 tenNV: employeeDict[invoice.maNV] || 'Không rõ',
             }));
 
-            setListInvoices(updatedInvoices);
+            // updatedInvoices.sort((a, b) => {
+            //     const dateA = new Date(a.ngayBan);
+            //     const dateB = new Date(b.ngayBan);
+            //     return dateA - dateB; // Sắp xếp theo thứ tự ngày từ cũ đến mới
+            //   });
+              
+              setListInvoices(updatedInvoices);
         } catch (error) {
             console.error('Error fetching data:', error);
         }

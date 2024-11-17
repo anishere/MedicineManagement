@@ -235,11 +235,18 @@ function ImportManagement() {
                         columns={columns}
                         dataSource={listCungCap}
                         rowKey="idCungCap"
+                        onRow={(record) => ({
+                            onClick: () => {
+                                setSelectedCungCap(record);  // Cập nhật thông tin chi tiết dòng đã chọn
+                                setIsUpdate(true);  // Chuyển sang chế độ cập nhật khi có dòng được chọn
+                            },
+                        })}
                     />
                 </div>
 
                 <div className="col-md-4">
                     <h4 className="mb-3">Thêm / Cập nhật cung cấp</h4>
+                    <p>ID: <small>{selectedCungCap.idCungCap}</small></p>
                     <div className="form-group">
                         <label htmlFor="maNV">Mã NV:</label>
                         <Input
@@ -295,14 +302,22 @@ function ImportManagement() {
                     </div>
 
                     <div className="form-group">
-                        <Button type="primary" onClick={isUpdate ? handleUpdate : handleAdd}>
-                            {isUpdate ? "Cập nhật" : "Thêm"}
+                        <Button type="primary" onClick={handleAdd}>
+                            Thêm
                         </Button>
+
+                        {isUpdate && (
+                            <Button type="primary" onClick={handleUpdate} style={{ marginLeft: "10px" }}>
+                                Cập nhật
+                            </Button>
+                        )}
+
                         {isUpdate && (
                             <Button danger onClick={handleDelete} style={{ marginLeft: "10px" }}>
                                 Xóa
                             </Button>
                         )}
+
                         <Button onClick={handleClear} style={{ marginLeft: "10px" }}>
                             Hủy
                         </Button>
