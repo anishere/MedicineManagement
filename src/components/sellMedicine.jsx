@@ -340,18 +340,57 @@ function SellMedicine() {
                 </div>
             </div>
 
-            <Modal title="Nhập số lượng" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-                <p>
-                    <label htmlFor="">Nhập số lượng: </label>
+            <Modal
+                title="Nhập số lượng"
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                centered
+                bodyStyle={{
+                    padding: "20px",
+                    backgroundColor: "#f9f9f9",
+                    borderRadius: "8px",
+                }}
+                style={{
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                }}
+            >
+                <p style={{ fontSize: "16px", fontWeight: "500", color: "#333" }}>
+                    <label htmlFor="quantity-input" style={{ marginRight: "8px" }}>Nhập số lượng:</label>
                     <input
-                        value={medicineSelected.quantity}
-                        onChange={(e) =>
-                            setMedicineSelected({ ...medicineSelected, quantity: parseInt(e.target.value) || 0 })
-                        }
+                        id="quantity-input"
+                        value={medicineSelected.quantity === 0 ? "" : medicineSelected.quantity}
+                        onChange={(e) => {
+                            const value = e.target.value.trim();
+                            setMedicineSelected({
+                                ...medicineSelected,
+                                quantity: value === "" ? 0 : parseInt(value),
+                            });
+                        }}
                         type="number"
+                        style={{
+                            padding: "8px",
+                            width: "60%",
+                            fontSize: "14px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            outline: "none",
+                            transition: "border-color 0.2s",
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onBlur={(e) => {
+                            if (!e.target.value.trim()) {
+                                setMedicineSelected({
+                                    ...medicineSelected,
+                                    quantity: 0,
+                                });
+                            }
+                        }}
                     />
                 </p>
             </Modal>
+
         </div>
     );
 }
