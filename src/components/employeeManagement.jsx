@@ -1,12 +1,18 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, useRef } from "react";
-import { Table, Input, Button, Space, Modal, DatePicker, Select } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import Highlighter from "react-highlight-words";
+import React, { useState, useEffect } from "react";
+import { Table, Input, Button, Modal, DatePicker, Select } from "antd";
 import { axiosCus } from "../axios/axios";
-import { URLListEmployee, URLEmployeID, URLAddEmployee, URLUpdate, URLDeleteEmployee, ChiNhanh } from "../../URL/url";
+import {
+    URLListEmployee,
+    URLEmployeID,
+    URLAddEmployee,
+    URLUpdate,
+    URLDeleteEmployee,
+    ChiNhanh,
+} from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
+import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
 
 function EmployeeManagement() {
     const [listNhanVien, setListNhanVien] = useState([]);
@@ -22,11 +28,6 @@ function EmployeeManagement() {
     });
     const [idSelected, setIdSelected] = useState("");
     const [isUpdate, setIsUpdate] = useState(false);
-    const [searchText, setSearchText] = useState("");
-    const [searchedColumn, setSearchedColumn] = useState("");
-    const searchInput = useRef(null);
-    const [salaryFilter, setSalaryFilter] = useState("");
-    const [salaryCondition, setSalaryCondition] = useState(">");
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -34,10 +35,10 @@ function EmployeeManagement() {
                 const response = await axiosCus.get(URLListEmployee);
                 const formattedData = response.listNhanVien.map((employee) => ({
                     ...employee,
-                    ngaySinh: dayjs(employee.ngaySinh).format("DD/MM/YYYY")
+                    ngaySinh: dayjs(employee.ngaySinh).format("YYYY-MM-DD"),
                 }));
                 setListNhanVien(formattedData);
-                setFilteredData(formattedData); // Khởi tạo dữ liệu đã lọc bằng dữ liệu gốc
+                setFilteredData(formattedData);
             } catch (error) {
                 console.error("Error fetching employees:", error);
             }
@@ -45,118 +46,19 @@ function EmployeeManagement() {
         fetchEmployees();
     }, [isUpdate]);
 
-    const handleSalaryFilter = () => {
-        const salaryValue = parseFloat(salaryFilter);
-        if (isNaN(salaryValue)) {
-            toast.warn("Vui lòng nhập một số hợp lệ cho lương");
-            return;
-        }
-    
-        // Khởi tạo mảng rỗng để lưu kết quả sau khi lọc
-        const filtered = [];
-    
-        // Duyệt qua từng nhân viên trong danh sách và áp dụng điều kiện
-        listNhanVien.forEach((employee) => {
-            const employeeSalary = parseFloat(employee.luong);
-    
-            // Kiểm tra điều kiện và thêm vào mảng `filtered` nếu thỏa mãn
-            if ((salaryCondition === ">" && employeeSalary > salaryValue) ||
-                (salaryCondition === "<" && employeeSalary < salaryValue)) {
-                filtered.push(employee);
-            }
-        });
-    
-        // Cập nhật danh sách đã lọc
-        setFilteredData(filtered);
-    };    
-
-    const handleResetFilter = () => {
-        setFilteredData(listNhanVien); // Trở về danh sách ban đầu
-        setSalaryFilter("");
-        setSalaryCondition(">");
-    };
-
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-    };
-
-    const handleReset = (clearFilters) => {
-        clearFilters();
-        setSearchText("");
-    };
-
-    const getColumnSearchProps = (dataIndex) => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-                {dataIndex === "ngaySinh" ? (
-                    <DatePicker
-                        ref={searchInput}
-                        placeholder="Chọn ngày"
-                        format="DD/MM/YYYY"
-                        onChange={(date) => setSelectedKeys(date ? [dayjs(date).format("YYYY-MM-DD")] : [])}
-                        style={{ marginBottom: 8, display: "block" }}
-                    />
-                ) : (
-                    <Input
-                        ref={searchInput}
-                        placeholder={`Search ${dataIndex}`}
-                        value={selectedKeys[0]}
-                        onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                        onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        style={{ marginBottom: 8, display: "block" }}
-                    />
-                )}
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Search
-                    </Button>
-                    <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Reset
-                    </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: (filtered) => (
-            <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
-        ),
-        onFilter: (value, record) => {
-            if (dataIndex === "ngaySinh") {
-                return dayjs(record[dataIndex]).format("YYYY-MM-DD") === value;
-            }
-            return record[dataIndex].toString().toLowerCase().includes(value.toLowerCase());
-        },
-        render: (text) =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ""}
-                />
-            ) : (
-                text
-            ),
-    });
-
     const handleAddEmployee = async () => {
         if (!employee.tenNV || !employee.sdt) {
             toast.warn("Vui lòng điền đủ thông tin.");
             return;
         }
         try {
-            await axiosCus.post(URLAddEmployee, employee);
+            const formattedEmployee = {
+                ...employee,
+                ngaySinh: employee.ngaySinh
+                    ? dayjs(employee.ngaySinh).format("YYYY-MM-DD")
+                    : null,
+            };
+            await axiosCus.post(URLAddEmployee, formattedEmployee);
             toast.success("Thêm nhân viên thành công!");
             setIsUpdate(!isUpdate);
             handleClearDataEmployee();
@@ -167,29 +69,30 @@ function EmployeeManagement() {
     };
 
     const handleUpdateEmployee = async () => {
-        // Kiểm tra xem mã NV có được nhập hay không
         if (!employee.maNV) {
             toast.warn("Mã nhân viên không hợp lệ hoặc chưa được nhập.");
             return;
         }
-    
-        // Kiểm tra xem mã NV có tồn tại trong danh sách nhân viên
         const employeeExists = listNhanVien.some((nv) => nv.maNV === employee.maNV);
         if (!employeeExists) {
             toast.warn("Mã nhân viên không tồn tại trong hệ thống.");
             return;
         }
-    
         try {
-            // Thực hiện cập nhật nếu mã NV tồn tại
-            await axiosCus.put(`${URLUpdate}${employee.maNV}`, employee);
+            const formattedEmployee = {
+                ...employee,
+                ngaySinh: employee.ngaySinh
+                    ? dayjs(employee.ngaySinh).format("YYYY-MM-DD")
+                    : null,
+            };
+            await axiosCus.put(`${URLUpdate}${employee.maNV}`, formattedEmployee);
             toast.success("Cập nhật thông tin thành công!");
             setIsUpdate(!isUpdate);
         } catch (error) {
             console.error("Error updating employee:", error);
             toast.error("Không thể cập nhật thông tin.");
         }
-    };    
+    };
 
     const handleDeleteEmployee = () => {
         if (!idSelected) {
@@ -203,7 +106,7 @@ function EmployeeManagement() {
             cancelText: "Hủy",
             onOk: async () => {
                 try {
-                    await axiosCus.delete(`${URLDeleteEmployee}${idSelected}`);
+                    await axiosCus.delete(`${URLDeleteEmployee}${employee.maNV}`);
                     toast.success("Xóa thành công!");
                     setIsUpdate(!isUpdate);
                 } catch (error) {
@@ -231,12 +134,13 @@ function EmployeeManagement() {
         setIdSelected(record.maNV);
         try {
             const response = await axiosCus.get(`${URLEmployeID}${record.maNV}`);
-            const { maNV, tenNV, gt, ngaySinh, sdt, luong, maCN } = response.listNhanVien[0];
+            const { maNV, tenNV, gt, ngaySinh, sdt, luong, maCN } =
+                response.listNhanVien[0];
             setEmployee({
                 maNV,
                 tenNV,
                 gt,
-                ngaySinh: dayjs(ngaySinh),
+                ngaySinh: dayjs(ngaySinh).format("YYYY-MM-DD"),
                 sdt,
                 luong,
                 maCN,
@@ -246,116 +150,101 @@ function EmployeeManagement() {
         }
     };
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
-    };
-
     const columns = [
-        { title: "Mã NV", dataIndex: "maNV", key: "maNV", ...getColumnSearchProps("maNV") },
-        { title: "Tên NV", dataIndex: "tenNV", key: "tenNV", ...getColumnSearchProps("tenNV") },
-        { title: "Giới Tính", dataIndex: "gt", key: "gt", ...getColumnSearchProps("gt") },
-        { title: "SĐT", dataIndex: "sdt", key: "sdt", ...getColumnSearchProps("sdt") },
-        { 
-            title: "Ngày Sinh", 
-            dataIndex: "ngaySinh", 
-            key: "ngaySinh", 
-            render: (text) => dayjs(text).isValid() ? dayjs(text).format("DD/MM/YYYY") : text,
-            ...getColumnSearchProps("ngaySinh") 
-        },
-        { title: "Lương", dataIndex: "luong", key: "luong", render: (text) => formatCurrency(text) },
+        { title: "Mã NV", dataIndex: "maNV", key: "maNV" },
+        { title: "Tên NV", dataIndex: "tenNV", key: "tenNV" },
+        { title: "Giới Tính", dataIndex: "gt", key: "gt" },
+        { title: "SĐT", dataIndex: "sdt", key: "sdt" },
+        { title: "Ngày Sinh", dataIndex: "ngaySinh", key: "ngaySinh" },
+        { title: "Lương", dataIndex: "luong", key: "luong" },
     ];
 
     return (
-        <div className="container">
-            <div className="mb-4">
-                <h4 className="mb-3">Lọc Lương</h4>
-                <Space>
-                    <Input
-                        type="number"
-                        placeholder="Nhập lương"
-                        value={salaryFilter}
-                        onChange={(e) => setSalaryFilter(e.target.value)}
-                        style={{ width: 120 }}
-                    />
-                    <Select
-                        value={salaryCondition}
-                        onChange={(value) => setSalaryCondition(value)}
-                        style={{ width: 120 }}
-                    >
-                        <Select.Option value=">">Lớn hơn</Select.Option>
-                        <Select.Option value="<">Nhỏ hơn</Select.Option>
-                    </Select>
-                    <Button type="primary" onClick={handleSalaryFilter}>
-                        Lọc
-                    </Button>
-                    <Button onClick={handleResetFilter}>
-                        Bỏ lọc
-                    </Button>
-                </Space>
-            </div>
-            
+        <div className="container mt-4">
             <div className="row">
-                <div className="col-md-7 col-12">
-                    <h4 className="mb-3">Danh Sách Nhân Viên</h4>
+                <div className="col-md-7">
+                    <h4 className="mb-4">Danh Sách Nhân Viên</h4>
                     <Table
                         columns={columns}
                         dataSource={filteredData}
                         rowKey="maNV"
-                        pagination={{ pageSize: 10 }}
                         onRow={(record) => ({
                             onClick: () => handleSelectEmployee(record),
-                            onMouseEnter: (e) => {
-                                e.currentTarget.style.cursor = "pointer";
-                            },
                         })}
+                        pagination={{ pageSize: 5 }}
                     />
                 </div>
-
-                <div className="col-md-5 col-12 mt-md-0 mt-4">
-                    <h3 className="mb-3">Chi Tiết Nhân Viên</h3>
-                    <div className="infoEmployee-detail">
-                        <p><label className="fw-bold">Mã NV</label>
-                            <Input value={employee.maNV} onChange={(e) => setEmployee({ ...employee, maNV: e.target.value })} />
-                        </p>
-                        <p><label className="fw-bold">Tên NV</label>
-                            <Input value={employee.tenNV} onChange={(e) => setEmployee({ ...employee, tenNV: e.target.value })} />
-                        </p>
-                        <p><label className="fw-bold">Giới Tính</label>
-                            <Select
-                                value={employee.gt}
-                                onChange={(value) => setEmployee({ ...employee, gt: value })}
-                                style={{ width: "100%" }}
-                            >
-                                <Select.Option value="Nam">Nam</Select.Option>
-                                <Select.Option value="Nữ">Nữ</Select.Option>
-                            </Select>
-                        </p>
-                        <p><label className="fw-bold">Ngày Sinh</label>
-                            <DatePicker
-                                value={employee.ngaySinh ? dayjs(employee.ngaySinh, "DD/MM/YYYY") : null}
-                                onChange={(date) => setEmployee({ ...employee, ngaySinh: date ? date.format("DD/MM/YYYY") : null })}
-                                format="DD/MM/YYYY"
-                                style={{ width: "100%" }}
-                            />
-                        </p>
-                        <p><label className="fw-bold">Số ĐT</label>
-                            <Input value={employee.sdt} onChange={(e) => setEmployee({ ...employee, sdt: e.target.value })} />
-                        </p>
-                        <p><label className="fw-bold">Lương</label>
-                            <Input
-                                value={employee.luong}
-                                onChange={(e) => setEmployee({ ...employee, luong: parseFloat(e.target.value) || 0 })}
-                                addonAfter="VND"
-                                type="number"
-                            />
-                        </p>
-
-                        <div className="button-group mt-3">
-                            <Button className="me-2" onClick={handleAddEmployee} type="primary">Thêm</Button>
-                            <Button className="me-2" onClick={handleUpdateEmployee} style={{ backgroundColor: "gold", color: "black" }}>Cập nhật</Button>
-                            <Button className="me-2" onClick={handleDeleteEmployee} danger>Xóa</Button>
-                            <Button onClick={handleClearDataEmployee} style={{ backgroundColor: "gray", color: "white" }}>Xóa thông tin</Button>
-                        </div>
+                <div className="col-md-5">
+                    <h4 className="mb-4">Chi Tiết Nhân Viên</h4>
+                    <Input
+                        className="mb-3"
+                        placeholder="Mã NV"
+                        value={employee.maNV}
+                        onChange={(e) =>
+                            setEmployee({ ...employee, maNV: e.target.value })
+                        }
+                    />
+                    <Input
+                        className="mb-3"
+                        placeholder="Tên NV"
+                        value={employee.tenNV}
+                        onChange={(e) =>
+                            setEmployee({ ...employee, tenNV: e.target.value })
+                        }
+                    />
+                    <Select
+                        className="mb-3"
+                        value={employee.gt}
+                        onChange={(value) => setEmployee({ ...employee, gt: value })}
+                        style={{ width: "100%" }}
+                    >
+                        <Select.Option value="Nam">Nam</Select.Option>
+                        <Select.Option value="Nữ">Nữ</Select.Option>
+                    </Select>
+                    <DatePicker
+                        className="mb-3"
+                        placeholder="Ngày Sinh"
+                        value={
+                            employee.ngaySinh ? dayjs(employee.ngaySinh) : null
+                        }
+                        onChange={(date) =>
+                            setEmployee({
+                                ...employee,
+                                ngaySinh: date ? date.format("YYYY-MM-DD") : null,
+                            })
+                        }
+                        format="YYYY-MM-DD"
+                        style={{ width: "100%" }}
+                    />
+                    <Input
+                        className="mb-3"
+                        placeholder="SĐT"
+                        value={employee.sdt}
+                        onChange={(e) =>
+                            setEmployee({ ...employee, sdt: e.target.value })
+                        }
+                    />
+                    <Input
+                        className="mb-3"
+                        placeholder="Lương"
+                        type="number"
+                        value={employee.luong}
+                        onChange={(e) =>
+                            setEmployee({
+                                ...employee,
+                                luong: parseFloat(e.target.value) || 0,
+                            })
+                        }
+                    />
+                    <div className="d-flex gap-2">
+                        <Button type="primary" onClick={handleAddEmployee}>
+                            Thêm
+                        </Button>
+                        <Button type="default" onClick={handleUpdateEmployee}>
+                            Cập nhật
+                        </Button>
+                        <Button className="me-2" onClick={handleDeleteEmployee} danger>Xóa</Button>
+                        <Button onClick={handleClearDataEmployee} style={{ backgroundColor: "gray", color: "white" }}>Xóa thông tin</Button>
                     </div>
                 </div>
             </div>

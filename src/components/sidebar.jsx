@@ -9,11 +9,11 @@ const { SubMenu } = Menu; // Sử dụng SubMenu từ Menu
 function Sidebar() {
 
     const handleLogout = () => {
-        // Xóa toàn bộ local storage
+        // Xóa toàn bộ local storage     
         localStorage.clear();
-    
-        // Làm mới lại trang
-        window.location.reload();
+        window.location.href = "/";
+        
+        //window.location.reload();
     };    
 
     return (
