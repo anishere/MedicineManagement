@@ -69,7 +69,7 @@ function Sidebar() {
                 </SubMenu>
 
                 <Menu.Item key='6' icon={<CarryOutOutlined />}>
-                    <Link to='/notes'>Ghi chú</Link> {/* Điều hướng đến "/notes" */}
+                    <Link to='/notePersonal'>Ghi chú</Link> {/* Điều hướng đến "/notes" */}
                 </Menu.Item>
 
                 <Menu.Item key='7' icon={<ProfileOutlined />}>

@@ -68,7 +68,12 @@ export const URLAddSupplier = 'NhaCungCap/AddSupplier'
 export const URLUpdateSupplier = 'NhaCungCap/UpdateSupplier/'
 export const URLDeleteSupplier = 'NhaCungCap/DeleteSupplier/'
 
-
+//Ghi chu
+export const URLListNote = 'NotePersonal/GetAllNotes?maNV='
+export const URLGetNoteID = 'NotePersonal/GetNoteByID?id='
+export const URLCreateNote = 'NotePersonal/CreateNote'
+export const URLUpdateNote = 'NotePersonal/UpdateNote?id='
+export const URLDeleteNote = 'NotePersonal/DeleteNote?id='
 
 
 

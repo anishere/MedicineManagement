@@ -13,6 +13,7 @@ import CustomerManagement from './components/customerManagement';  // Component 
 import EmployeeManagement from './components/employeeManagement';
 import CategoryManagement from './components/categoryManagement';
 import SupplierManagement from './components/supplierManagement';
+import NotePersonal from './components/notePersonal';
 import Personal from './components/personal';
 import ImportManagement from './components/importManagement';
 import 'react-toastify/dist/ReactToastify.css';
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/employeeManagement" element={<EmployeeManagement />} />
                 <Route path="/supplierManagement" element={<SupplierManagement />} />
                 <Route path="/importManagement" element={<ImportManagement />} />
+                <Route path="/notePersonal" element={<NotePersonal />} />
                 <Route path="/personal" element={<Personal />} />
               </Routes>
             </Flex>
