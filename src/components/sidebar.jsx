@@ -1,26 +1,40 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { ProfileOutlined, LoginOutlined, CarryOutOutlined, SettingOutlined, FormOutlined, UserSwitchOutlined, UsergroupAddOutlined, ContainerOutlined, BarChartOutlined } from "@ant-design/icons";
-import { Flex, Menu } from "antd";
-import { FaUserDoctor } from "react-icons/fa6";
+import { Flex, Menu, Modal } from "antd";
 import { Link } from "react-router-dom"; // Import Link
+import logo from '../assets/imgStore/logo.jpg'
 
 const { SubMenu } = Menu; // Sử dụng SubMenu từ Menu
 
 function Sidebar() {
 
     const handleLogout = () => {
-        // Xóa toàn bộ local storage     
-        localStorage.clear();
-        window.location.href = "/";
-        
-        //window.location.reload();
-    };    
+        Modal.confirm({
+            title: "Xác nhận đăng xuất",
+            content: "Bạn có chắc chắn muốn đăng xuất?",
+            okText: "Đăng xuất",
+            cancelText: "Hủy",
+            onOk: () => {
+                // Xóa toàn bộ local storage
+                localStorage.clear();
+                window.location.href = "/";
+            },
+            onCancel: () => {
+                console.log("Hủy đăng xuất");
+            },
+            centered: true,
+        });
+    };
 
     return (
         <>
             <Flex align="center" justify="center">
                 <div className="logo">
-                    <FaUserDoctor />
+                    <img 
+                        src={logo}
+                        alt="Pharmacist Logo" 
+                        style={{ width: "70px", height: "auto" }}
+                    />
                 </div>
             </Flex>
 

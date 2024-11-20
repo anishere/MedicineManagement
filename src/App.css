@@ -59,8 +59,20 @@
 
 .logo {
   color: #4f6f52;
-  margin: 35px 0;
+  margin: 20px 0;
   font-size: 1.7rem;
+}
+
+.logo img {
+  border-radius: 50%;
+  border: 2px solid #1890ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.logo img:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 .menu-bar {
@@ -341,39 +353,110 @@
 }
 
 /* Btn, and color end */
+.login {
+  background: url("./assets/imgStore/2045.jpg") no-repeat center center;
+  background-size: cover; /* Hình ảnh sẽ bao phủ toàn bộ màn hình */
+  background-position: center 36%; /* Dịch hình ảnh xuống 10% chiều cao */
+  height: 100vh; /* Chiều cao bằng với chiều cao của màn hình */
+  width: 100vw; /* Chiều rộng bằng với chiều rộng của màn hình */
+  overflow: hidden; /* Ẩn phần thừa nếu có */
+  position: relative; /* Đảm bảo nội dung bên trong có thể định vị */
+}
 
 .container-login {
   width: 30%;
   margin: 120px auto;
   text-align: center;
+  background-color: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ cho form */
+  transition: all 0.3s ease; /* Thêm hiệu ứng khi form thay đổi */
+}
+
+.container-login:hover {
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15); /* Tăng bóng đổ khi hover */
+  transform: translateY(-5px); /* Nâng form lên một chút khi hover */
 }
 
 .container-login h1 {
   margin-bottom: 30px;
+  font-size: 24px;
+  color: #333; /* Màu chữ cho tiêu đề */
 }
 
 .container-login input {
   display: block;
   width: 100%;
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* Giảm khoảng cách giữa các ô nhập liệu */
   height: 40px;
-  border-radius: 30px;
-  border: 1px solid transparent;
+  border-radius: 25px; /* Tạo hình bầu dục mềm mại cho các ô nhập liệu */
+  border: 1px solid #ddd; /* Đổi màu viền cho ô nhập liệu */
   outline: none;
   padding-left: 15px;
-  caret-color: green;
+  font-size: 16px; /* Tăng kích thước chữ cho dễ đọc */
+  transition: all 0.3s ease; /* Thêm hiệu ứng cho input */
+}
+
+.container-login input:focus {
+  border-color: green; /* Đổi màu viền khi ô nhập liệu được focus */
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); /* Thêm hiệu ứng bóng khi focus */
 }
 
 .btn-login {
   width: 200px;
   height: 40px;
   background-color: green;
+  color: white;
   margin: auto;
-  align-content: center;
-  border-radius: 30px;
+  border-radius: 25px; /* Tạo hình tròn mềm mại cho nút */
   cursor: pointer;
+  font-size: 16px; /* Tăng kích thước chữ trong nút */
+  font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .btn-login:hover {
-  opacity: 0.7;
+  opacity: 0.8;
+  transform: scale(1.05); /* Phóng to nút khi hover */
+  box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3); /* Thêm bóng đổ khi hover */
+}
+
+.btn-login:active {
+  transform: scale(1); /* Đảm bảo nút không bị phóng to khi nhấn */
+}
+
+/* responsive */
+
+@media (max-width: 1027px) {
+  div.hide-onMobi {
+    display: none;
+  }
+}
+
+.header-reload {
+  cursor: pointer;
+  transition: transform 1s ease;
+}
+
+.header-reload:hover {
+  transform: rotate(360deg);
+}
+
+.welcome-title {
+  background: linear-gradient(90deg, #1890ff, #73d13d);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 1.25rem; /* Kích thước lớn hơn mặc định */
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+}
+
+.welcome-title:hover {
+  background: linear-gradient(90deg, #73d13d, #1890ff);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
