@@ -9,6 +9,7 @@ import {
     URLUpdate,
     URLDeleteEmployee,
     ChiNhanh,
+    URLUserByID,
 } from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
@@ -29,6 +30,24 @@ function EmployeeManagement() {
     const [idSelected, setIdSelected] = useState("");
     const [isUpdate, setIsUpdate] = useState(false);
 
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+    }, []);
+    if(visible) console.log(visible.QuanLiNhanSu.children.QuanLiNhanVien.actions.them)
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
@@ -237,13 +256,22 @@ function EmployeeManagement() {
                         }
                     />
                     <div className="d-flex gap-2">
+                        {visible && visible.QuanLiNhanSu.children.QuanLiNhanVien.actions.them &&
                         <Button type="primary" onClick={handleAddEmployee}>
                             Thêm
                         </Button>
+                        }
+
+                        {visible && visible.QuanLiNhanSu.children.QuanLiNhanVien.actions.sua &&
                         <Button type="default" onClick={handleUpdateEmployee}>
                             Cập nhật
                         </Button>
+                        }
+
+                        {visible && visible.QuanLiNhanSu.children.QuanLiNhanVien.actions.xoa &&
                         <Button className="me-2" onClick={handleDeleteEmployee} danger>Xóa</Button>
+                        }
+
                         <Button onClick={handleClearDataEmployee} style={{ backgroundColor: "gray", color: "white" }}>Xóa thông tin</Button>
                     </div>
                 </div>

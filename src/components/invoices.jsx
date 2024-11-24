@@ -2,7 +2,7 @@
 import { Button, Input, Modal, Space, Table } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLDeleDetailByIDInvoice, URLDeleteInvoice, URLDetailsInvoice, URLGetInvoice, URLListCustomer, URLListEmployee, URLListInvouces, URLListMedicine } from "../../URL/url";
+import { URLDeleDetailByIDInvoice, URLDeleteInvoice, URLDetailsInvoice, URLGetInvoice, URLListCustomer, URLListEmployee, URLListInvouces, URLListMedicine, URLUserByID } from "../../URL/url";
 import Highlighter from "react-highlight-words";
 import { DeleteOutlined, PrinterOutlined, SearchOutlined } from "@ant-design/icons";
 import pdfMake from 'pdfmake/build/pdfmake';
@@ -24,6 +24,24 @@ function invoices() {
 
     // State lưu thông tin khách hàng
     const [customerInfo, setCustomerInfo] = useState({ tenKH: '', sdtKH: '' });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees(); 
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -399,9 +417,11 @@ function invoices() {
                                 <Button className="me-1" onClick={generatePDF} type="primary" style={{ marginTop: '20px' }}>
                                     In <PrinterOutlined />
                                 </Button>
+                                {visible && visible.QuanLiThuoc.children.HoaDon.actions.xoa &&
                                 <Button onClick={handleDeleteInvoice}  danger style={{ marginTop: '20px' }}>
                                     Xóa <DeleteOutlined />
                                 </Button>
+                                }
                             </div>
                         </>
                     )}

@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { axiosCus } from "../axios/axios";
-import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh, URLUpdateMedicine, URLListEmployee } from "../../URL/url";
+import { URLEmployeID, URLListCustomer, URLListMedicine, URLCreateInvoice, URLAddMedicineToInvoice, URLGetCusByID, ChiNhanh, URLUpdateMedicine, URLListEmployee, URLUserByID } from "../../URL/url";
 import { Modal, Button, Table, InputNumber } from "antd";
 import MedicineTable from "../components/tableMediforSell";
 import CustomerTable from "../components/tableCusforSell";
@@ -35,6 +35,25 @@ function SellMedicine() {
     const [discountRate, setDiscountRate] = useState(0); // NEW: Giảm giá cho hóa đơn
 
     const [isUpdate, setIsUpdate] = useState(false);
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+        if(visible) console.log(visible.QuanLiThuoc.children.Ban.actions.lapHoaDon)
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -333,9 +352,11 @@ function SellMedicine() {
                         <p>Tổng giá sau giảm: {totalAfterDiscount.toLocaleString()} VND</p>
                     </div>
                     <div className="text-end">
+                        {visible && visible.QuanLiThuoc.children.Ban.actions.lapHoaDon &&
                         <Button type="primary" onClick={confirmInvoice} style={{ marginTop: '10px' }}>
                             Xác nhận và in
                         </Button>
+                        }
                     </div>
                 </div>
             </div>

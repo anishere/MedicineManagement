@@ -11,6 +11,7 @@ import {
     URLUpdateCungCap,
     URLDeleteCungCap,
     ChiNhanh,
+    URLUserByID,
 } from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
@@ -34,12 +35,29 @@ function ImportManagement() {
 
     const [isUpdate, setIsUpdate] = useState(false);
 
-    // States for filtering by day, month, and year
     const [filterDate, setFilterDate] = useState({
         day: 0, // Default 0 means no filter
         month: 0, // Default 0 means no filter
         year: 0, // Default 0 means no filter
     });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+    }, []);
 
     // Fetch dữ liệu function
     const fetchData = async () => {
@@ -57,7 +75,6 @@ function ImportManagement() {
         }
     };
 
-    // Fetch data when the component is first rendered
     useEffect(() => {
         fetchData();
     }, [isUpdate]);
@@ -302,17 +319,19 @@ function ImportManagement() {
                     </div>
 
                     <div className="form-group">
+                        {visible && visible.QuanLiNhapHang.children.DanhSachNhapHang.actions.them &&
                         <Button type="primary" onClick={handleAdd}>
                             Thêm
                         </Button>
+                        }
 
-                        {isUpdate && (
+                        {visible && visible.QuanLiNhapHang.children.DanhSachNhapHang.actions.sua && (
                             <Button type="primary" onClick={handleUpdate} style={{ marginLeft: "10px" }}>
                                 Cập nhật
                             </Button>
                         )}
 
-                        {isUpdate && (
+                        {visible && visible.QuanLiNhapHang.children.DanhSachNhapHang.actions.xoa && (
                             <Button danger onClick={handleDelete} style={{ marginLeft: "10px" }}>
                                 Xóa
                             </Button>

@@ -5,7 +5,7 @@ import { Table, Input, Button, Space, Modal } from "antd";
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { axiosCus } from "../axios/axios";
-import { URLCategory, URLGetCateByID, URLCreateCate, URLUpdateCate, URLDeleteCate } from "../../URL/url";
+import { URLCategory, URLGetCateByID, URLCreateCate, URLUpdateCate, URLDeleteCate, URLUserByID } from "../../URL/url";
 import { toast } from "react-toastify";
 
 function CategoryManagement() {
@@ -22,6 +22,24 @@ function CategoryManagement() {
         maDanhMuc: '',
         tenDanhMuc: '',
     });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees(); 
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -250,9 +268,12 @@ function CategoryManagement() {
                             <Input value={category.tenDanhMuc} onChange={e => setCategory({ ...category, tenDanhMuc: e.target.value })} className="col-8" />
                         </p>
                         <div className="button-group mt-3">
-                            <Button onClick={handleAddCategory} type="primary" className="me-2">Thêm</Button>
-                            <Button onClick={handleUpdateCategory} style={{ backgroundColor: 'gold', borderColor: 'gold', color: 'black' }} className="me-2">Cập nhật</Button>
-                            <Button onClick={handleDeleteCategory} danger className="me-2">Xóa</Button>
+                            {visible && visible.QuanLiThuoc.children.QuanLiDanhMuc.actions.them &&
+                                <Button onClick={handleAddCategory} type="primary" className="me-2">Thêm</Button>}
+                            {visible && visible.QuanLiThuoc.children.QuanLiDanhMuc.actions.sua &&
+                                <Button onClick={handleUpdateCategory} style={{ backgroundColor: 'gold', borderColor: 'gold', color: 'black' }} className="me-2">Cập nhật</Button>}
+                            {visible && visible.QuanLiThuoc.children.QuanLiDanhMuc.actions.xoa &&
+                                <Button onClick={handleDeleteCategory} danger className="me-2">Xóa</Button>}
                             <Button onClick={handleClearDataCategory} style={{ backgroundColor: 'gray', borderColor: 'gray', color: 'white' }}>Xóa thông tin</Button>
                         </div>
                     </div>

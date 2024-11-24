@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useEffect, useRef, useState } from "react";
-import { URLAddMedicine, URLCategory, URLDeleteMedicine, URLListMedicine, URLMedicineByID, URLUpdateMedicine, URLUploadImg } from "../../URL/url";
+import { URLAddMedicine, URLCategory, URLDeleteMedicine, URLListMedicine, URLMedicineByID, URLUpdateMedicine, URLUploadImg, URLUserByID } from "../../URL/url";
 import { axiosCus } from "../axios/axios";
 import { Table, Input, Button, Space, Modal } from "antd";
 import { FolderOpenOutlined, SearchOutlined } from '@ant-design/icons';
@@ -42,6 +42,25 @@ function MedicineManagement() {
         XuatXu: '',
         KhuVucLuuTru: '',
     });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+        if(visible) console.log(visible.QuanLiThuoc.children.DanhSachThuoc.actions.them)
+    }, []);
 
      // Hàm xử lý thay đổi của MaThuoc
      const handleMaThuocChange = (e) => {
@@ -686,10 +705,13 @@ function MedicineManagement() {
                         </div>
                     </div>
                     <div className="col-2">
-                        <p><button onClick={handleAddMedicine} className="btn-effectMedicine btn btn-info">Thêm</button></p>
-                        <p><button onClick={handleUpdateMedicine} className="btn-effectMedicine btn btn-warning">Cập nhật</button></p>
-                        <p><button onClick={handleDeleteMedicine} className="btn-effectMedicine btn btn-danger">Xóa</button></p>
-                        <p><button onClick={handleClearDataMedi} className="btn-effectMedicine btn btn-secondary">Xóa thông tin</button></p>
+                        {visible && visible.QuanLiThuoc.children.DanhSachThuoc.actions.them &&
+                            <p><button onClick={handleAddMedicine} className="btn-effectMedicine btn btn-info">Thêm</button></p>}
+                        {visible && visible.QuanLiThuoc.children.DanhSachThuoc.actions.sua &&
+                            <p><button onClick={handleUpdateMedicine} className="btn-effectMedicine btn btn-warning">Cập nhật</button></p>}
+                        {visible && visible.QuanLiThuoc.children.DanhSachThuoc.actions.xoa &&
+                            <p><button onClick={handleDeleteMedicine} className="btn-effectMedicine btn btn-danger">Xóa</button></p>}
+                        {<p><button onClick={handleClearDataMedi} className="btn-effectMedicine btn btn-secondary">Xóa thông tin</button></p>}
                     </div>
                 </div>
             </div>

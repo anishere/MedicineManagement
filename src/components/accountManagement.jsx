@@ -21,6 +21,85 @@ function AccountManagement() {
     const [listNhanVien, setListNhanVien] = useState([]); 
     const [nhanVienMap, setNhanVienMap] = useState({}); 
 
+    const [parsedVisibleFunction, setParsedVisibleFunction] = useState({});
+
+    const [isModalOpenVisible, setIsModalOpenVisible] = useState(false);
+
+    const [visible, setVisible] = useState()
+
+    // Mở modal
+    const showModalVisible = () => {
+        setIsModalOpenVisible(true);
+    };
+
+    // Đóng modal khi nhấn OK
+    const handleOkVisible = () => {
+        setIsModalOpenVisible(false);
+    };
+
+    const handleToggleVisibility = (module, child = null) => {
+        const updatedVisibleFunction = { ...parsedVisibleFunction };
+    
+        if (child === null) {
+            // Toggle visible for module
+            updatedVisibleFunction[module].visible = !updatedVisibleFunction[module].visible;
+    
+            // Nếu module bị ẩn, ẩn tất cả children
+            if (!updatedVisibleFunction[module].visible && updatedVisibleFunction[module].children) {
+                Object.entries(updatedVisibleFunction[module].children).forEach(([childKey, childValue]) => {
+                    childValue.visible = false;
+                });
+            }
+        } else {
+            // Toggle visible for child
+            updatedVisibleFunction[module].children[child].visible =
+                !updatedVisibleFunction[module].children[child].visible;
+        }
+    
+        setParsedVisibleFunction(updatedVisibleFunction);
+    };
+
+    const handleToggleAction = (module, child, action) => {
+        const updatedVisibleFunction = { ...parsedVisibleFunction };
+    
+        if (child === null) {
+            // Nếu không có child, xử lý actions cấp module
+            if (updatedVisibleFunction[module] && updatedVisibleFunction[module].actions) {
+                updatedVisibleFunction[module].actions[action] =
+                    !updatedVisibleFunction[module].actions[action];
+            }
+        } else {
+            // Nếu có child, xử lý actions của child
+            if (
+                updatedVisibleFunction[module] &&
+                updatedVisibleFunction[module].children &&
+                updatedVisibleFunction[module].children[child] &&
+                updatedVisibleFunction[module].children[child].actions
+            ) {
+                updatedVisibleFunction[module].children[child].actions[action] =
+                    !updatedVisibleFunction[module].children[child].actions[action];
+            }
+        }
+    
+        setParsedVisibleFunction(updatedVisibleFunction); // Cập nhật state
+    };        
+
+    //visible
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+    }, []);
+    
     const weekDays = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
     // Check manv co ton tai ko thi moi dc thay doi hay them vao continue... 
     const [account, setAccount] = useState({
@@ -161,6 +240,11 @@ function AccountManagement() {
                         return;
                     }
                 }
+
+                updatedAccount = {
+                    ...account,
+                    visibleFunction: JSON.stringify(parsedVisibleFunction), // Serialize trước khi gửi
+                };
     
                 // Gửi yêu cầu cập nhật tài khoản với URL ảnh thực từ server
                 await axiosCus.put(`${URLUpdateAccount}${idSelected}`, updatedAccount);
@@ -205,6 +289,11 @@ function AccountManagement() {
                 // Cập nhật URL ảnh mới vào account
                 newAccount.avatar = uploadResponse.imageUrl;
             }
+
+            newAccount = {
+                ...account,
+                visibleFunction: JSON.stringify(parsedVisibleFunction), // Serialize trước khi gửi
+            };
     
             const response = await axiosCus.post(URLCreateAccount, newAccount);
     
@@ -295,6 +384,7 @@ function AccountManagement() {
     useEffect(() => {
         if (accountData) {
             setAccount({
+                ...account,
                 userName: accountData.userName,
                 password: accountData.password,
                 avatar: accountData.avatar,
@@ -311,8 +401,16 @@ function AccountManagement() {
                 maNV: accountData.maNV,
                 maCN: accountData.maCN,
             });
+    
+            // Parse visibleFunction thành object JSON và lưu vào state riêng
+            try {
+                setParsedVisibleFunction(JSON.parse(accountData.visibleFunction || '{}'));
+            } catch (error) {
+                console.error('Error parsing visibleFunction:', error);
+                setParsedVisibleFunction({});
+            }
         }
-    }, [accountData]);
+    }, [accountData]);    
 
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
@@ -339,6 +437,64 @@ function AccountManagement() {
         }));
     }; 
 
+    const handleToggleFunction = (module, child, action) => {
+        const updatedVisibleFunction = { ...parsedVisibleFunction }; // Sao chép object hiện tại
+        if (
+            updatedVisibleFunction[module] &&
+            updatedVisibleFunction[module].children &&
+            updatedVisibleFunction[module].children[child] &&
+            updatedVisibleFunction[module].children[child].actions
+        ) {
+            // Toggle trạng thái action
+            updatedVisibleFunction[module].children[child].actions[action] =
+                !updatedVisibleFunction[module].children[child].actions[action];
+        }
+    
+        setParsedVisibleFunction(updatedVisibleFunction); // Cập nhật state
+    };    
+
+    const handleRemoveAllPermissions = () => {
+        const updatedVisibleFunction = { ...parsedVisibleFunction };
+    
+        // Gán visible = false cho tất cả các cấp
+        Object.entries(updatedVisibleFunction).forEach(([module, details]) => {
+            details.visible = false;
+            if (details.children) {
+                Object.entries(details.children).forEach(([child, childDetails]) => {
+                    childDetails.visible = false;
+                    if (childDetails.actions) {
+                        Object.keys(childDetails.actions).forEach((action) => {
+                            childDetails.actions[action] = false;
+                        });
+                    }
+                });
+            }
+        });
+    
+        setParsedVisibleFunction(updatedVisibleFunction);
+    };
+
+    const handleGrantAllPermissions = () => {
+        const updatedVisibleFunction = { ...parsedVisibleFunction };
+    
+        // Gán visible = true cho tất cả các cấp
+        Object.entries(updatedVisibleFunction).forEach(([module, details]) => {
+            details.visible = true;
+            if (details.children) {
+                Object.entries(details.children).forEach(([child, childDetails]) => {
+                    childDetails.visible = true;
+                    if (childDetails.actions) {
+                        Object.keys(childDetails.actions).forEach((action) => {
+                            childDetails.actions[action] = true;
+                        });
+                    }
+                });
+            }
+        });
+    
+        setParsedVisibleFunction(updatedVisibleFunction);
+    };
+    
     return (
         <div className="container">
             <div className="row">
@@ -407,10 +563,12 @@ function AccountManagement() {
                                         <Select.Option value="User">Dược sĩ</Select.Option>
                                     </Select>
                                 </p>
-                                <p><label className="fw-bold">Quyền chức năng</label>
-                                    <Input value={account.visibleFunction} onChange={e => setAccount({ ...account, visibleFunction: e.target.value })} />
+                                <p>
+                                    <label className="fw-bold">Quyền chức năng</label>
+                                    <Button type="primary" className="ms-2" onClick={showModalVisible}>
+                                        Cài đặt quyền chức năng
+                                    </Button>
                                 </p>
-        
                                 {/* Work Schedule */}
                                 <p><label className="fw-bold me-2">Lịch làm việc</label>
                                     <Select 
@@ -493,14 +651,126 @@ function AccountManagement() {
                         )}
     
                         <div className="button-group mt-3">
-                            <Button className="me-2" onClick={handleAddAccount} type="primary">Tạo</Button>
-                            <Button className="me-2" onClick={handleUpdateAccount} style={{ backgroundColor: 'gold', color: 'black' }}>Cập nhật</Button>
-                            <Button className="me-2" onClick={handleDeleteAccount} danger>Xóa</Button>
+                            {visible && visible.QuanLiNhanSu.children.QuanLiTaiKhoan.actions.them &&
+                                <Button className="me-2" onClick={handleAddAccount} type="primary">Tạo</Button>
+                            }
+                            {visible && visible.QuanLiNhanSu.children.QuanLiTaiKhoan.actions.sua &&
+                                <Button className="me-2" onClick={handleUpdateAccount} style={{ backgroundColor: 'gold', color: 'black' }}>Cập nhật</Button>
+                            }
+                            {visible && visible.QuanLiNhanSu.children.QuanLiTaiKhoan.actions.xoa &&
+                                <Button className="me-2" onClick={handleDeleteAccount} danger>Xóa</Button>
+                            }
                             <Button onClick={handleClearDataAccount} style={{ backgroundColor: 'gray', color: 'white' }}>Xóa thông tin</Button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Modal hiển thị quyền chức năng */}
+            <Modal
+            title="Cài đặt quyền chức năng"
+            open={isModalOpenVisible}
+            onOk={handleOkVisible}
+            onCancel={handleOkVisible}
+            width={800}
+        >
+            {/* Header buttons */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="fw-bold">Quản lý quyền chức năng</h5>
+                <div>
+                    <Button
+                        type="danger"
+                        className="me-2"
+                        onClick={handleRemoveAllPermissions}
+                    >
+                        Xóa tất cả quyền
+                    </Button>
+                    <Button
+                        type="primary"
+                        onClick={handleGrantAllPermissions}
+                    >
+                        Cấp full quyền
+                    </Button>
+                </div>
+            </div>
+
+            {/* Permissions tree */}
+            <div className="function-group mt-4">
+                {Object.entries(parsedVisibleFunction).map(([module, details]) => (
+                    <div key={module} className="mb-4">
+                        {/* Module cấp 1 */}
+                        <div className="d-flex align-items-center mb-2">
+                            <h5 className="fw-bold me-3 text-primary">{module}</h5>
+                            <Button
+                                type={details.visible ? 'primary' : 'default'}
+                                className="me-2"
+                                onClick={() => handleToggleVisibility(module)}
+                            >
+                                {details.visible ? 'Hiển thị' : 'Ẩn'}
+                            </Button>
+                        </div>
+
+                        {details.visible && (
+                            <div className="ps-4 border-start border-primary">
+                                {/* Nếu có children */}
+                                {details.children &&
+                                    Object.entries(details.children).map(([child, childDetails]) => (
+                                        <div key={child} className="mb-3">
+                                            <div className="d-flex align-items-center mb-1">
+                                                <h6 className="fw-semibold me-3 text-secondary">{child}</h6>
+                                                <Button
+                                                    type={childDetails.visible ? 'primary' : 'default'}
+                                                    className="me-2"
+                                                    onClick={() => handleToggleVisibility(module, child)}
+                                                >
+                                                    {childDetails.visible ? 'Hiển thị' : 'Ẩn'}
+                                                </Button>
+                                            </div>
+                                            {childDetails.visible && (
+                                                <div className="ps-3">
+                                                    {childDetails.actions &&
+                                                        Object.entries(childDetails.actions).map(
+                                                            ([action, isEnabled]) => (
+                                                                <Button
+                                                                    key={action}
+                                                                    type={isEnabled ? 'primary' : 'default'}
+                                                                    className="me-2 mb-2"
+                                                                    onClick={() =>
+                                                                        handleToggleAction(
+                                                                            module,
+                                                                            child,
+                                                                            action
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {action}
+                                                                </Button>
+                                                            )
+                                                        )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                {/* Nếu không có children nhưng có actions */}
+                                {!details.children &&
+                                    details.actions &&
+                                    Object.entries(details.actions).map(([action, isEnabled]) => (
+                                        <Button
+                                            key={action}
+                                            type={isEnabled ? 'primary' : 'default'}
+                                            className="me-2 mb-2"
+                                            onClick={() => handleToggleAction(module, null, action)}
+                                        >
+                                            {action}
+                                        </Button>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </Modal>
         </div>
     );
 }

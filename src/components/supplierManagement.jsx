@@ -5,7 +5,7 @@ import { Table, Input, Button, Space, Modal } from "antd";
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { axiosCus } from "../axios/axios";
-import { URLGetAllSupplier, URLGetSupplierByID, URLAddSupplier, URLUpdateSupplier, URLDeleteSupplier } from "../../URL/url";
+import { URLGetAllSupplier, URLGetSupplierByID, URLAddSupplier, URLUpdateSupplier, URLDeleteSupplier, URLUserByID } from "../../URL/url";
 import { toast } from "react-toastify";
 
 function SupplierManagement() {
@@ -25,6 +25,24 @@ function SupplierManagement() {
         sdt: '',
         email: '',
     });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -290,9 +308,15 @@ function SupplierManagement() {
                             <Input value={supplier.email} onChange={e => setSupplier({ ...supplier, email: e.target.value })} className="col-9" />
                         </p>
                         <div className="button-group mt-3">
-                            <Button onClick={handleAddSupplier} type="primary" className="me-2">Thêm</Button>
-                            <Button onClick={handleUpdateSupplier} style={{ backgroundColor: 'gold', borderColor: 'gold', color: 'black' }} className="me-2">Cập nhật</Button>
-                            <Button onClick={handleDeleteSupplier} danger className="me-2">Xóa</Button>
+                            {visible && visible.QuanLiNhapHang.children.NhaCungCap.actions.them &&
+                                <Button onClick={handleAddSupplier} type="primary" className="me-2">Thêm</Button>
+                            }
+                            {visible && visible.QuanLiNhapHang.children.NhaCungCap.actions.sua &&
+                                <Button onClick={handleUpdateSupplier} style={{ backgroundColor: 'gold', borderColor: 'gold', color: 'black' }} className="me-2">Cập nhật</Button>
+                            }
+                            {visible && visible.QuanLiNhapHang.children.NhaCungCap.actions.xoa &&
+                                <Button onClick={handleDeleteSupplier} danger className="me-2">Xóa</Button>
+                            }
                             <Button onClick={handleClearDataSupplier} style={{ backgroundColor: 'gray', borderColor: 'gray', color: 'white' }}>Xóa thông tin</Button>
                         </div>
                     </div>

@@ -5,7 +5,7 @@ import { Table, Input, Button, Space, Select, Modal } from "antd"; // Thêm Sele
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { axiosCus } from "../axios/axios";
-import { URLListCustomer, URLGetCusByID, URLAddCustomer, URLUpdateCustomer, URLDeleCustomer } from "../../URL/url";
+import { URLListCustomer, URLGetCusByID, URLAddCustomer, URLUpdateCustomer, URLDeleCustomer, URLUserByID } from "../../URL/url";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { ChiNhanh } from "../../URL/url"; // Import ChiNhanh
@@ -27,6 +27,25 @@ function CustomerManagement() {
         gt: '',
         maCN: ChiNhanh,
     });
+
+    // visible
+    const [visible, setVisible] = useState();
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            const userID = localStorage.getItem("userID");
+
+            try {
+                const response = await axiosCus.get(`${URLUserByID}${userID}`);
+                setVisible(JSON.parse(response.user[0].visibleFunction));
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+            }
+        };
+        
+        fetchEmployees();
+    }, []);
+    if(visible) console.log(visible);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -275,8 +294,10 @@ function CustomerManagement() {
                             </Select>
                         </p>
                         <div className="button-group mt-3">
-                            <Button onClick={handleAddCustomer} type="primary" className="me-2">Thêm</Button>
+                            {visible && visible.QuanLiKhachHang.actions.them &&
+                                <Button onClick={handleAddCustomer} type="primary" className="me-2">Thêm</Button>}
                             
+                            {visible && visible.QuanLiKhachHang.actions.sua &&
                             <Button 
                                 onClick={handleUpdateCustomer} 
                                 style={{ backgroundColor: 'gold', borderColor: 'gold', color: 'black' }} 
@@ -284,9 +305,12 @@ function CustomerManagement() {
                             >
                                 Cập nhật
                             </Button>
+                            }
                             
+                            {visible && visible.QuanLiKhachHang.actions.xoa &&
                             <Button onClick={handleDeleteCustomer} danger className="me-2">Xóa</Button>
-                            
+                            }
+
                             <Button 
                                 onClick={handleClearDataCustomer} 
                                 style={{ backgroundColor: 'gray', borderColor: 'gray', color: 'white' }}
