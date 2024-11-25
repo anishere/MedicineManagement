@@ -4,6 +4,8 @@ import { axiosCus } from "../axios/axios";
 import { URLLogin } from "../../URL/url";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
+import { Flex } from "antd";
+import logo from '../assets/imgStore/logo.jpg'
 
 function login() {
     const [username, setUsername] = useState('')
@@ -25,6 +27,7 @@ function login() {
                     localStorage.setItem("maNV", user.maNV);
                     localStorage.setItem("userID", user.userID);
                     localStorage.setItem("isLogin", true);
+                    localStorage.setItem("displaySettings", `{"showName":true,"showDateTime":true,"showTemperature":true,"showAnimation":true}`)
                     toast('Đăng nhập thành công', {
                         position: "top-right",
                         autoClose: 2000,
@@ -98,6 +101,22 @@ function login() {
     
     return (
         <div className="login">
+
+            <Flex className="mt-5 shadow-lg" align="center" justify="center">
+                <div className="logo-container">
+                    <img 
+                        src={logo}
+                        alt="Pharmacist Logo" 
+                        className="logo"
+                    />
+                    <div className="orbits">
+                        <div className="orbit orbit1"></div>
+                        <div className="orbit orbit2"></div>
+                        <div className="orbit orbit3"></div>
+                    </div>
+                </div>
+            </Flex>
+
             <div className="container-login">
                 <h1>Đăng nhập</h1>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Tên đăng nhập"/>

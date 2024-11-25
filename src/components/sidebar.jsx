@@ -11,8 +11,12 @@ const { SubMenu } = Menu; // Sử dụng SubMenu từ Menu
 
 function Sidebar() {
     const [visible, setVisible] = useState();
+    const [displaySettings, setDisplaySettings] = useState()
 
     useEffect(() => {
+        const disPlaySetting = JSON.parse(localStorage.getItem('displaySettings'));
+        setDisplaySettings(disPlaySetting);
+
         const fetchEmployees = async () => {
             const userID = localStorage.getItem("userID");
 
@@ -48,12 +52,19 @@ function Sidebar() {
     return (
         <>
             <Flex align="center" justify="center">
-                <div className="logo">
+                <div className="logo-container">
                     <img 
                         src={logo}
                         alt="Pharmacist Logo" 
-                        style={{ width: "70px", height: "auto" }}
+                        className="logo"
                     />
+                    {displaySettings && displaySettings.showAnimation &&
+                    <div className="orbits">
+                        <div className="orbit orbit1"></div>
+                        <div className="orbit orbit2"></div>
+                        <div className="orbit orbit3"></div>
+                    </div>
+                    }   
                 </div>
             </Flex>
 

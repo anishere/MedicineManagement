@@ -20,7 +20,7 @@ export const URLListAccount = 'Account/ListUser'
 export const URLUserByID = 'Account/GetUserByID?userID='
 export const URLUpdateAccount = 'Account/UpdateAccount?userID='
 export const URLCreateAccount = 'Account/CreateAccount'
-export const URLChangePassword = 'Account/ChangePassword'
+export const URLChangePassword = 'Account/ChangePassword?userID='
 export const URLDeleteAccount = 'Account/DeleteUser?userID='
 export const URLUploadAvatar = 'Account/UploadImage'
 
