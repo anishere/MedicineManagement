@@ -9,14 +9,23 @@ import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import axios from "axios";
 
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 function cusHeader() {
     const [accountInfo, setAccountInfo] = useState();
     const [employeeInfo, setEmployeeInfo] = useState();
     const [currentDateTime, setCurrentDateTime] = useState(dayjs().format("YYYY-MM-DD HH:mm:ss"));
+    const [timezone, setTimezone] = useState('UTC');
     const [weatherInfo, setWeatherInfo] = useState(null);
 
+    const [displaySettings, setDisplaySettings] = useState()
+
     // Thành phố mặc định
-    const defaultCity = localStorage.getItem("city") || "Cần Thơ";
+    const defaultCity = localStorage.getItem("userCity") || "Cần Thơ";
 
     const handleReload = () => {
         window.location.href = "/";
@@ -64,6 +73,9 @@ function cusHeader() {
     };
 
     useEffect(() => {
+        const disPlaySetting = JSON.parse(localStorage.getItem('displaySettings'));
+        setDisplaySettings(disPlaySetting);
+
         const fetchEmployees = async () => {
             const userID = localStorage.getItem("userID");
             const maNV = localStorage.getItem("maNV");
@@ -81,18 +93,26 @@ function cusHeader() {
 
         fetchEmployees();
         fetchWeather(defaultCity);
+    }, []);
 
+    useEffect(() => {
+        // Lấy múi giờ từ localStorage khi component được render
+        const savedTimezone = localStorage.getItem('userTimezone') || 'UTC';
+        setTimezone(savedTimezone);
+
+        // Cập nhật giờ hiện tại dựa trên múi giờ
         const timer = setInterval(() => {
-            setCurrentDateTime(dayjs().format("YYYY-MM-DD HH:mm:ss"));
+            setCurrentDateTime(dayjs().tz(savedTimezone).format('YYYY-MM-DD HH:mm:ss'));
         }, 1000);
 
-        return () => clearInterval(timer);
+        return () => clearInterval(timer); // Dọn dẹp interval khi component bị hủy
     }, []);
 
     return (
         <>
             <Flex align="center" justify="space-between">
                 {/* Tiêu đề */}
+                {displaySettings && displaySettings.showName &&
                 <Typography.Title 
                     level={4} 
                     type="secondary" 
@@ -100,28 +120,29 @@ function cusHeader() {
                 >
                     Xin chào {accountInfo && accountInfo.userType} {employeeInfo && employeeInfo.tenNV}!
                 </Typography.Title>
+                }  
     
                 {/* Thông tin ngày giờ và thời tiết */}
-                <Flex align="center" justify="space-between" style={{ width: "60%" }}>
+                <Flex align="center" justify="space-between" style={{ width: displaySettings?.showName ? "65%" : "100%" }}>
                     {/* Ngày giờ */}
+                    {displaySettings && displaySettings.showDateTime &&
                     <div className="badge bg-light text-dark p-2 rounded hide-onMobi">
                         <Typography.Text type="secondary">
-                            {currentDateTime}
+                        {timezone} {currentDateTime}
                         </Typography.Text>
                     </div>
-    
+                    }
+
                     {/* Thời tiết */}
-                    {weatherInfo ? (
-                        <div className="badge bg-info text-white p-2 rounded hide-onMobi mx-2">
+                    {displaySettings && displaySettings?.showTemperature && (
+                        <div className={`badge ${weatherInfo ? 'bg-info text-white' : 'bg-warning text-dark'} p-2 rounded hide-onMobi mx-2`}>
                             <Typography.Text type="secondary">
-                                Thành phố: {weatherInfo.city} | Nhiệt độ: {weatherInfo.temperature}°C | Gió: {weatherInfo.windspeed} km/h
+                                {weatherInfo 
+                                    ? `Thành phố: ${weatherInfo.city} | Nhiệt độ: ${weatherInfo.temperature}°C | Gió: ${weatherInfo.windspeed} km/h`
+                                    : 'Đang tải thời tiết...'}
                             </Typography.Text>
                         </div>
-                    ) : (
-                        <div className="badge bg-warning text-dark p-2 rounded hide-onMobi mx-2">
-                            <Typography.Text type="secondary">Đang tải thời tiết...</Typography.Text>
-                        </div>
-                    )}
+                    )}                  
     
                     {/* Nút điều khiển */}
                     <Space size="large" style={{ flex: 1, justifyContent: "end" }}>

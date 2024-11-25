@@ -363,6 +363,11 @@
   position: relative; /* Đảm bảo nội dung bên trong có thể định vị */
 }
 
+.login-iconEyes {
+  right: 15px;
+  top: 8px;
+}
+
 .container-login {
   width: 30%;
   margin: 120px auto;
@@ -377,6 +382,14 @@
 .container-login:hover {
   box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15); /* Tăng bóng đổ khi hover */
   transform: translateY(-5px); /* Nâng form lên một chút khi hover */
+}
+
+/* login start */
+
+.btn-login:disabled {
+  background-color: #ccc; /* Màu xám nhạt */
+  cursor: not-allowed; /* Con trỏ hiển thị trạng thái không được phép */
+  opacity: 0.6; /* Hiệu ứng làm nhạt nút */
 }
 
 .container-login h1 {
@@ -404,7 +417,7 @@
 }
 
 .btn-login {
-  width: 200px;
+  width: 40%;
   height: 40px;
   background-color: green;
   color: white;

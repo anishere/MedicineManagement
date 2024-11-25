@@ -21,6 +21,7 @@ import { ToastContainer } from 'react-toastify';
 import SellMedicine from './components/sellMedicine';
 import Login from './page/login'
 import Invoices from './components/invoices';
+import Setting from './components/setting';
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/importManagement" element={<ImportManagement />} />
                 <Route path="/notePersonal" element={<NotePersonal />} />
                 <Route path="/personal" element={<Personal />} />
+                <Route path="/settings" element={<Setting />} />
               </Routes>
             </Flex>
           </Content>
