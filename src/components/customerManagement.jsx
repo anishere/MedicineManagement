@@ -246,6 +246,7 @@ function CustomerManagement() {
             gt: '',
             maCN: ChiNhanh,
         });
+        setIdSelected('')
     };
 
     return (

@@ -12,10 +12,19 @@ import RevenuePieChart from './revenuePieChart';
 import MedicineExpiryChart from './medicineExpiryChart';
 import ImportByMonthChart from './importByMonthChart';
 import ProfitByMonthChart from './profitByMonthChart';
+//nhan vien
+import RevenueComparisonChart from './revenueComparisonChart';
+//top doanh thu
+import TopEmployeesChart from './topEmployeesChart';
+
+
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [invoiceData, setInvoiceData] = useState([]);
+  const maNV = localStorage.getItem("maNV");
 
   // State cho các biểu đồ và năm/tháng được chọn
   const [revenueDataByDate, setRevenueDataByDate] = useState([]);
@@ -53,6 +62,8 @@ const Dashboard = () => {
         const revenueByDate = {};
         const revenueYears = new Set();
         const revenueMonths = new Set();
+
+        setInvoiceData(invoices);
 
         invoices.forEach(invoice => {
           const date = dayjs(invoice.ngayBan).format('YYYY-MM-DD');
@@ -312,6 +323,11 @@ const Dashboard = () => {
         </div>
       </div>
       <ProfitByMonthChart data={profitDataByMonth} />
+
+      <div className="mt-4">
+        <RevenueComparisonChart data={invoiceData} maNV={maNV} />
+        <TopEmployeesChart data={invoiceData} />
+      </div>
     </div>
   );
 };

@@ -3,8 +3,8 @@ import axios from 'axios';
 const serverHost = window.location.hostname;
 export const axiosCus = axios.create({
 	// ser chạy gì thay chuẩn đó
-  //baseURL: `http://${serverHost}:5215/api/`,
-	baseURL: `https://${serverHost}:44323/api/`,
+  baseURL: `http://${serverHost}:5215/api/`,
+	//baseURL: `https://${serverHost}:44323/api/`,
 });
 
 axiosCus.interceptors.response.use(function (response) {
