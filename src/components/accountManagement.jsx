@@ -459,6 +459,8 @@ function AccountManagement() {
         // Gán visible = false cho tất cả các cấp
         Object.entries(updatedVisibleFunction).forEach(([module, details]) => {
             details.visible = false;
+    
+            // Nếu có children, tiếp tục duyệt qua các children
             if (details.children) {
                 Object.entries(details.children).forEach(([child, childDetails]) => {
                     childDetails.visible = false;
@@ -469,10 +471,17 @@ function AccountManagement() {
                     }
                 });
             }
+    
+            // Nếu có actions (như QuanLiKhachHang), cũng gán actions cho nó thành false
+            if (details.actions) {
+                Object.keys(details.actions).forEach((action) => {
+                    details.actions[action] = false;
+                });
+            }
         });
     
         setParsedVisibleFunction(updatedVisibleFunction);
-    };
+    };    
 
     const handleGrantAllPermissions = () => {
         const updatedVisibleFunction = { ...parsedVisibleFunction };
@@ -480,6 +489,8 @@ function AccountManagement() {
         // Gán visible = true cho tất cả các cấp
         Object.entries(updatedVisibleFunction).forEach(([module, details]) => {
             details.visible = true;
+    
+            // Nếu có children, tiếp tục duyệt qua các children
             if (details.children) {
                 Object.entries(details.children).forEach(([child, childDetails]) => {
                     childDetails.visible = true;
@@ -490,10 +501,17 @@ function AccountManagement() {
                     }
                 });
             }
+    
+            // Nếu có actions (như QuanLiKhachHang), cũng gán visible và actions cho nó
+            if (details.actions) {
+                Object.keys(details.actions).forEach((action) => {
+                    details.actions[action] = true;
+                });
+            }
         });
     
         setParsedVisibleFunction(updatedVisibleFunction);
-    };
+    };    
     
     return (
         <div className="container">

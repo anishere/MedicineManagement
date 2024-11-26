@@ -118,7 +118,7 @@ function login() {
             </Flex>
 
             <div className="container-login">
-                <h1>Đăng nhập</h1>
+                <h1>Chào mừng bạn trở lại</h1>
                 <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Tên đăng nhập"/>
                 <p className="position-relative">
                     <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu"/>
