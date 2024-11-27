@@ -13,55 +13,140 @@ function login() {
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = () => {
-      const fetchData = async () => {
-        try {
-            const res = await axiosCus.post(URLLogin,{
-              "userName": username,
-              "password": password,
-            });
+        const fetchData = async () => {
+            try {
+                const res = await axiosCus.post(URLLogin, {
+                    "userName": username,
+                    "password": password,
+                });
+    
+                if (res.statusCode === 200) {
+                    const user = res.user[0];
+    
+                    const handleLoginSuccess = () => {
+                        localStorage.setItem("maNV", user.maNV);
+                        localStorage.setItem("userID", user.userID);
+                        localStorage.setItem("isLogin", true);
+                        localStorage.setItem("displaySettings", `{"showName":true,"showDateTime":true,"showTemperature":true,"showAnimation":true}`);
+                        toast('Đăng nhập thành công', {
+                            position: "top-right",
+                            autoClose: 2000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                            theme: "light",
+                            transition: Bounce,
+                        });
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    };
+    
+                    const isCurrentTimeInRange = (startTimeStr, endTimeStr) => {
+                        const [startHours, startMinutes, startSeconds] = startTimeStr.split(':').map(Number);
+                        const [endHours, endMinutes, endSeconds] = endTimeStr.split(':').map(Number);
+    
+                        const now = new Date();
+                        const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHours, startMinutes, startSeconds);
+                        const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHours, endMinutes, endSeconds);
+    
+                        return now >= startTime && now <= endTime;
+                    };
+    
+                    if (user.userType === 'User') {
+                        // Kiểm tra activeStatus
+                        if (user.activeStatus === 0) {
+                            toast.error('Tài khoản chưa kích hoạt', {
+                                position: "top-right",
+                                autoClose: 5000,
+                                hideProgressBar: false,
+                                closeOnClick: true,
+                                pauseOnHover: true,
+                                draggable: true,
+                                progress: undefined,
+                                theme: "light",
+                                transition: Bounce,
+                            });
+                            return;
+                        }
 
-            if (res.statusCode === 200) {
-                const user = res.user[0];
-            
-                const handleLoginSuccess = () => {
-                    localStorage.setItem("maNV", user.maNV);
-                    localStorage.setItem("userID", user.userID);
-                    localStorage.setItem("isLogin", true);
-                    localStorage.setItem("displaySettings", `{"showName":true,"showDateTime":true,"showTemperature":true,"showAnimation":true}`)
-                    toast('Đăng nhập thành công', {
-                        position: "top-right",
-                        autoClose: 2000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                        theme: "light",
-                        transition: Bounce,
-                    });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                };
-            
-                const isCurrentTimeInRange = (startTimeStr, endTimeStr) => {
-                    const [startHours, startMinutes, startSeconds] = startTimeStr.split(':').map(Number);
-                    const [endHours, endMinutes, endSeconds] = endTimeStr.split(':').map(Number);
-            
-                    const now = new Date();
-                    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHours, startMinutes, startSeconds);
-                    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHours, endMinutes, endSeconds);
-            
-                    return now >= startTime && now <= endTime;
-                };
-            
-                if (user.userType === 'User') {
-                    if (user.startTime && user.endTime) {
-                        if (isCurrentTimeInRange(user.startTime, user.endTime)) {
-                            console.log("Thời gian hiện tại nằm trong khoảng!");
+                        // Kiểm tra activeShedule và ngày kích hoạt
+                        if (user.activeShedule === 1) {
+                            const currentDate = new Date();
+                            const activationDate = new Date(user.activationDate);
+                            const deactivationDate = new Date(user.deactivationDate);
+                            if (currentDate < activationDate || currentDate > deactivationDate) {
+                                toast.error('Tài khoản không trong thời gian kích hoạt', {
+                                    position: "top-right",
+                                    autoClose: 5000,
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true,
+                                    progress: undefined,
+                                    theme: "light",
+                                    transition: Bounce,
+                                });
+                                return;
+                            }
+                        }
+    
+                        // Kiểm tra workShedule và workDayofWeek
+                        if (user.workShedule === 1) {
+                            const currentDayOfWeek = new Date().getDay(); // Lấy ngày trong tuần (0-6, Chủ nhật là 0)
+                            
+                            // Điều chỉnh để ngày bắt đầu từ thứ Hai (2)
+                            const adjustedDay = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Chủ nhật (0) là ngày cuối tuần trong chuỗi (6), các ngày còn lại trừ đi 1
+
+                            const workDays = user.workDayofWeek; // Ví dụ: "1111100" - làm việc từ thứ 2 đến thứ 6
+
+                            // Kiểm tra nếu ngày hiện tại là ngày không làm việc
+                            if (workDays[adjustedDay] === '0') {
+                                toast.error('Hôm nay không phải là ngày làm việc', {
+                                    position: "top-right",
+                                    autoClose: 5000,
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true,
+                                    progress: undefined,
+                                    theme: "light",
+                                    transition: Bounce,
+                                });
+                                return;
+                            }
+                        }
+    
+                        // Kiểm tra thời gian hoạt động (startTime, endTime)
+                        if (user.startTime && user.endTime) {
+                            if (isCurrentTimeInRange(user.startTime, user.endTime)) {
+                                console.log("Thời gian hiện tại nằm trong khoảng!");
+                                handleLoginSuccess();
+                            } else {
+                                toast.error('Chưa đến giờ hoạt động', {
+                                    position: "top-right",
+                                    autoClose: 5000,
+                                    hideProgressBar: false,
+                                    closeOnClick: true,
+                                    pauseOnHover: true,
+                                    draggable: true,
+                                    progress: undefined,
+                                    theme: "light",
+                                    transition: Bounce,
+                                });
+                            }
+                        } else {
+                            console.log("startTime hoặc endTime không tồn tại.");
+                        }
+    
+                    } else if (user.userType === 'Admin') {
+                        // Admin chỉ kiểm tra activeStatus
+                        if (user.activeStatus === 1) {
                             handleLoginSuccess();
                         } else {
-                            toast.error('Chưa đến giờ hoạt động', {
+                            toast.error('Tài khoản chưa kích hoạt', {
                                 position: "top-right",
                                 autoClose: 5000,
                                 hideProgressBar: false,
@@ -73,31 +158,26 @@ function login() {
                                 transition: Bounce,
                             });
                         }
-                    } else {
-                        console.log("startTime hoặc endTime không tồn tại.");
                     }
-                } else if (user.userType === 'Admin') {
-                    handleLoginSuccess();
-                }
-            } else {
-                toast.error('Tài khoản hoặc mật khẩu không chính xác', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
-            }  
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-      };
-      fetchData();
-    }
+                } else {
+                    toast.error('Tài khoản hoặc mật khẩu không chính xác', {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        theme: "light",
+                        transition: Bounce,
+                    });
+                }  
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchData();
+    };    
     
     return (
         <div className="login">
