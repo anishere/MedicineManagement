@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Modal, DatePicker, Select } from "antd";
+import React, { useState, useEffect, useRef } from "react";
+import { Table, Input, Button, Modal, DatePicker, Select, Space } from "antd";
 import { axiosCus } from "../axios/axios";
 import {
     URLListEmployee,
@@ -14,6 +14,8 @@ import {
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
+import { SearchOutlined } from "@ant-design/icons";
+import Highlighter from "react-highlight-words";
 
 function EmployeeManagement() {
     const [listNhanVien, setListNhanVien] = useState([]);
@@ -33,6 +35,12 @@ function EmployeeManagement() {
     // visible
     const [visible, setVisible] = useState();
 
+    //search
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const searchInput = useRef(null);
+
+
     useEffect(() => {
         const fetchEmployees = async () => {
             const userID = localStorage.getItem("userID");
@@ -47,7 +55,7 @@ function EmployeeManagement() {
         
         fetchEmployees();
     }, []);
-    if(visible) console.log(visible.QuanLiNhanSu.children.QuanLiNhanVien.actions.them)
+
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
@@ -169,14 +177,83 @@ function EmployeeManagement() {
         }
     };
 
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        setSearchText(selectedKeys[0]);
+        setSearchedColumn(dataIndex);
+    };
+    
+    const handleReset = (clearFilters) => {
+        clearFilters();
+        setSearchText('');
+    };
+    
+    const getColumnSearchProps = (dataIndex) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+            <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{ marginBottom: 8, display: 'block' }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Search
+                    </Button>
+                    <Button
+                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Reset
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+        render: (text) =>
+            searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                    searchWords={[searchText]}
+                    autoEscape
+                    textToHighlight={text ? text.toString() : ''}
+                />
+            ) : (
+                text
+            ),
+    });
+    
     const columns = [
-        { title: "Mã NV", dataIndex: "maNV", key: "maNV" },
-        { title: "Tên NV", dataIndex: "tenNV", key: "tenNV" },
-        { title: "Giới Tính", dataIndex: "gt", key: "gt" },
-        { title: "SĐT", dataIndex: "sdt", key: "sdt" },
-        { title: "Ngày Sinh", dataIndex: "ngaySinh", key: "ngaySinh" },
-        { title: "Lương", dataIndex: "luong", key: "luong" },
-    ];
+        { title: 'Mã NV', dataIndex: 'maNV', key: 'maNV', ...getColumnSearchProps('maNV') },
+        { title: 'Tên NV', dataIndex: 'tenNV', key: 'tenNV', ...getColumnSearchProps('tenNV') },
+        { title: 'Giới Tính', dataIndex: 'gt', key: 'gt', ...getColumnSearchProps('gt') },
+        { title: 'SĐT', dataIndex: 'sdt', key: 'sdt', ...getColumnSearchProps('sdt') },
+        { title: 'Ngày Sinh', dataIndex: 'ngaySinh', key: 'ngaySinh', ...getColumnSearchProps('ngaySinh') },
+        { 
+            title: 'Lương', 
+            dataIndex: 'luong', 
+            key: 'luong', 
+            ...getColumnSearchProps('luong'),
+            render: (text) => {
+                // Định dạng lương với VNĐ
+                return text ? text.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : 'Chưa cập nhật';
+            }
+        },    
+    ];    
 
     return (
         <div className="container mt-4">
